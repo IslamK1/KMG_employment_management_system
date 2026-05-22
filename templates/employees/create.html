@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Новый сотрудник</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">EMS</div>
+    <div class="nav-links">
+      <a href="/employees/" class="btn btn-sm">Назад</a>
+      <a href="/logout" class="btn btn-danger btn-sm">Выйти</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h1>Новый сотрудник</h1>
+
+    {% if error %}
+      <div class="alert error">{{ error }}</div>
+    {% endif %}
+
+    <div class="card">
+      <form method="post" action="/employees/create">
+        <div class="form-group">
+          <label>Имя</label>
+          <input type="text" name="name" placeholder="Иван Иванов" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" placeholder="ivan@company.com" required>
+        </div>
+        <div class="form-group">
+          <label>Должность</label>
+          <input type="text" name="position" placeholder="Backend Developer">
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" name="password" required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Создать</button>
+          <a href="/employees/" class="btn">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+</body>
+</html>

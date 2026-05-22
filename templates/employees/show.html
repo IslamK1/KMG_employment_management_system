@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ emp.name }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">EMS</div>
+    <div class="nav-links">
+      <a href="/employees/" class="btn btn-sm">Список</a>
+      <a href="/logout" class="btn btn-danger btn-sm">Выйти</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h1>{{ emp.name }}</h1>
+
+    <div class="card">
+      <div class="detail-row"><span class="label">ID:</span> {{ emp.id }}</div>
+      <div class="detail-row"><span class="label">Email:</span> {{ emp.email }}</div>
+      <div class="detail-row"><span class="label">Должность:</span> {{ emp.position or "—" }}</div>
+    </div>
+
+    <div class="form-actions" style="margin-top:1rem">
+      <a href="/employees/edit/{{ emp.id }}" class="btn btn-warning">Редактировать</a>
+      <a href="/employees/delete/{{ emp.id }}"
+         class="btn btn-danger"
+         onclick="return confirm('Удалить?')">Удалить</a>
+    </div>
+  </main>
+
+</body>
+</html>
