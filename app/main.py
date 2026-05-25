@@ -7,10 +7,6 @@ from app.database import Base, engine
 from app.auth import router as auth_router
 from app.employee_routes import router as emp_router
 
-# При старте приложения создаём все таблицы в БД если их нет
-# Смотрит на все классы которые наследуют Base (Employee и тд)
-# Если таблица уже существует — не трогает её
-Base.metadata.create_all(bind=engine)
 
 # Создаём главное приложение FastAPI
 app = FastAPI(title="Employee Management System")
