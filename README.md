@@ -108,7 +108,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Создать .env файл
+### 4. Создать .env файл и положить туда ссылку на базу данных
 
 ```Создайте файл .env в корне проекта
 DATABASE_URL=postgresql://postgres:ТВОй_ПАРОЛЬ@localhost:5432/employee_management
