@@ -40,6 +40,15 @@
           <label>Пароль</label>
           <input type="password" name="password" required>
         </div>
+        <div class="form-group">
+          <label>Компания</label>
+          <select name="oil_company_id" class="form-select">
+            <option value="">— Не выбрано —</option>
+            {% for company in companies %}
+            <option value="{{ company.id }}">{{ company.name }} ({{ company.region }})</option>
+            {% endfor %}
+          </select>
+        </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Создать</button>
           <a href="/employees/" class="btn">Отмена</a>

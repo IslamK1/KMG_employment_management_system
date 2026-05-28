@@ -36,6 +36,18 @@
           <label>Должность</label>
           <input type="text" name="position" value="{{ emp.position or '' }}">
         </div>
+        <div class="form-group">
+          <label>Компания</label>
+          <select name="oil_company_id" class="form-select">
+            <option value="">— Не выбрано —</option>
+            {% for company in companies %}
+            <option value="{{ company.id }}"
+              {% if emp.oil_company_id == company.id %}selected{% endif %}>
+              {{ company.name }} ({{ company.region }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Сохранить</button>
           <a href="/employees/{{ emp.id }}" class="btn">Отмена</a>

@@ -13,3 +13,4 @@ class Well(Base):
     oil_company_id = Column(Integer, ForeignKey("oil_companies.id"), nullable=False)
 
     oil_company = relationship("OilCompany", back_populates="wells")
+    daily_productions = relationship("DailyProduction", back_populates="well")

@@ -3,9 +3,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import bcrypt
-
 from app.database import get_db
-from app.models import Employee
+from app.models import Employee, OilCompany 
 from app.dependencies import require_auth
 
 # prefix="/employees" — все роуты в этом файле начинаются с /employees
@@ -57,16 +56,20 @@ def index(request: Request, db: Session = Depends(get_db)):
 
 # GET /employees/create — форма создания нового сотрудника
 @router.get("/create", response_class=HTMLResponse)
-def create_form(request: Request):
+def create_form(request: Request, db: Session = Depends(get_db)):
     guard = auth_guard(request)
     if guard:
         return guard
+    
+    companies = db.query(OilCompany).all()  # Cписок компаний для выбора в форме
 
     # Просто показываем пустую форму, error=None — нет ошибок
     return templates.TemplateResponse(
         request=request,
         name="employees/create.html",
-        context={"error": None, "user": request.session.get("user_name")},
+        context= {"error": None, 
+         "user": request.session.get("user_name")
+         , "companies": companies},
     )
 
 
@@ -76,8 +79,9 @@ def create(
     request: Request,
     name: str = Form(...),
     email: str = Form(...),
-    position: str = Form(""),   # необязательное поле, по умолчанию пустая строка
+    position: str = Form(""),   
     password: str = Form(...),
+    oil_company_id: int = Form(None),  
     db: Session = Depends(get_db),
 ):
     guard = auth_guard(request)
@@ -88,13 +92,15 @@ def create(
     # SQL: SELECT * FROM employees WHERE email = '...' LIMIT 1
     existing = db.query(Employee).filter(Employee.email == email).first()
     if existing:
+        companies = db.query(OilCompany).all() 
         # Возвращаем форму с ошибкой — не делаем редирект
         return templates.TemplateResponse(
             request=request,
             name="employees/create.html",
             context={
                 "error": "Email уже занят",
-                "user": request.session.get("user_name")
+                "user": request.session.get("user_name"),
+                "companies": companies 
             },
         )
 
@@ -110,6 +116,7 @@ def create(
         email=email,
         position=position,
         password=hashed_password,
+        oil_company_id=oil_company_id
     )
 
     db.add(emp)     # добавляем в сессию (ещё не в БД)
@@ -130,7 +137,7 @@ def edit_form(emp_id: int, request: Request, db: Session = Depends(get_db)):
     # Ищем сотрудника по id
     # SQL: SELECT * FROM employees WHERE id = 3 LIMIT 1
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
-
+    companies = db.query(OilCompany).all()  
     # Если сотрудник не найден — отправляем на список (не падаем с ошибкой)
     if not emp:
         return RedirectResponse(url="/employees/", status_code=302)
@@ -142,7 +149,8 @@ def edit_form(emp_id: int, request: Request, db: Session = Depends(get_db)):
         context={
             "emp": emp,
             "error": None,
-            "user": request.session.get("user_name")
+            "user": request.session.get("user_name"),
+            "companies": companies 
         },
     )
 
@@ -155,6 +163,7 @@ def edit(
     name: str = Form(...),
     email: str = Form(...),
     position: str = Form(""),
+    oil_company_id: int = Form(None),
     db: Session = Depends(get_db),
 ):
     guard = auth_guard(request)
@@ -170,7 +179,8 @@ def edit(
     emp.name = name
     emp.email = email
     emp.position = position
-
+    emp.oil_company_id = oil_company_id
+    
     # Сохраняем изменения в БД
     db.commit()
 

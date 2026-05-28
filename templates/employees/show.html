@@ -22,6 +22,14 @@
       <div class="detail-row"><span class="label">ID:</span> {{ emp.id }}</div>
       <div class="detail-row"><span class="label">Email:</span> {{ emp.email }}</div>
       <div class="detail-row"><span class="label">Должность:</span> {{ emp.position or "—" }}</div>
+      <div class="detail-row">
+        <span class="label">Компания:</span>
+        {{ emp.oil_company.name if emp.oil_company else "—" }}
+      </div>
+      <div class="detail-row">
+        <span class="label">Регион:</span>
+        {{ emp.oil_company.region if emp.oil_company else "—" }}
+      </div>
     </div>
 
     <div class="form-actions" style="margin-top:1rem">

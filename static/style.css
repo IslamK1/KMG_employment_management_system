@@ -96,6 +96,18 @@ a { text-decoration: none; color: inherit; }
 
 .form-actions { display: flex; gap: .75rem; margin-top: 1.5rem; }
 
+.form-select {
+  width: 100%;
+  padding: .65rem 1rem;
+  border: 1.5px solid #ddd;
+  border-radius: 7px;
+  font-size: .95rem;
+  background: #fff;
+  outline: none;
+  transition: border-color .2s;
+}
+.form-select:focus { border-color: #4f46e5; }
+
 /* ── Login ── */
 .login-wrapper {
   display: flex;

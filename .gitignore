@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 .env
 test.db
+*.db
 .idea/
 .vscode/
 *.egg-info/
