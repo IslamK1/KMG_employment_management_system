@@ -6,7 +6,7 @@
 
 ## Стек технологий
 
-- **FastAPI**еб-фреймворк
+- **FastAPI** - веб фреймворк
 - **SQLAlchemy** — ORM для работы с базой данных
 - **Alembic** — миграции базы данных
 - **PostgreSQL** — база данных
@@ -110,9 +110,9 @@ pip install -r requirements.txt
 
 ### 4. Создать .env файл
 
-Создайте файл '.env' в корне проекта: 
-
+```Создайте файл .env в корне проекта
 DATABASE_URL=postgresql://postgres:ТВОй_ПАРОЛЬ@localhost:5432/employee_management
+```
 
 ### 5. Создать базу данных в PostgreSQL
 
