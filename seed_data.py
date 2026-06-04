@@ -4,9 +4,9 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.database import SessionLocal
 from app.models import OilCompany, Well, Employee, DailyProduction
 
+import bcrypt
 from faker import Faker 
 from faker.providers import BaseProvider
-import bcrypt
 
 
 #Класс провайдера для генерации фейковых скважин 

@@ -1,49 +1,66 @@
+"""
+Модуль маршрутов для управления сотрудниками.
+Содержит CRUD операции: список, создание, просмотр, редактирование, удаление.
+"""
+
+import bcrypt
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-import bcrypt
 from app.database import get_db
 from app.models import Employee, OilCompany 
 from app.dependencies import require_auth
 
-# prefix="/employees" — все роуты в этом файле начинаются с /employees
-# GET / становится GET /employees/
-# GET /create становится GET /employees/create
-# и так далее
+
 router = APIRouter(prefix="/employees")
 
 templates = Jinja2Templates(directory="templates")
 
 
-# Локальный охранник — вызывается в начале каждого роута
-# Проверяет залогинен ли пользователь
-# Возвращает редирект если нет, None если да
+
 def auth_guard(request: Request):
-    result = require_auth(request)  # из dependencies.py
+    """
+    Проверяет авторизацию пользователя для защиты маршрутов.
 
-    # isinstance проверяет тип объекта
-    # Если вернулся RedirectResponse — пользователь не залогинен
+    Вызывает require_auth и возвращает редирект если пользователь
+    не залогинен. Используется в начале каждого защищённого маршрута.
+
+    Args:
+        request (Request): Объект текущего HTTP запроса.
+
+    Returns:
+        RedirectResponse | None: Редирект на /login или None если залогинен.
+    """
+
+    result = require_auth(request)  
+
     if isinstance(result, RedirectResponse):
-        return result  # возвращаем редирект на /login
+        return result  
 
-    return None  # пользователь залогинен, всё ок
+    return None 
 
 
-# GET /employees/ — список всех сотрудников (главная страница дашборда)
 @router.get("/", response_class=HTMLResponse)
 def index(request: Request, db: Session = Depends(get_db)):
-    # Проверяем авторизацию — если не залогинен, уходим на /login
+    """
+    Отображает список всех сотрудников.
+
+    Args:
+        request (Request): Объект текущего HTTP запроса.
+        db (Session): Сессия базы данных.
+
+    Returns:
+        HTMLResponse | RedirectResponse: Страница со списком сотрудников
+        или редирект на /login если не залогинен.
+    """
+
     guard = auth_guard(request)
     if guard:
         return guard
 
-    # Получаем всех сотрудников из БД
-    # SQL: SELECT * FROM employees
     employees = db.query(Employee).all()
 
-    # Рендерим шаблон и передаём список сотрудников
-    # user — имя залогиненного пользователя для отображения в navbar
     return templates.TemplateResponse(
         request=request,
         name="employees/index.html",
@@ -54,16 +71,26 @@ def index(request: Request, db: Session = Depends(get_db)):
     )
 
 
-# GET /employees/create — форма создания нового сотрудника
 @router.get("/create", response_class=HTMLResponse)
 def create_form(request: Request, db: Session = Depends(get_db)):
+    """
+    Отображает форму создания нового сотрудника.
+
+    Args:
+        request (Request): Объект текущего HTTP запроса.
+        db (Session): Сессия базы данных.
+
+    Returns:
+        HTMLResponse | RedirectResponse: Форма создания сотрудника
+        или редирект на /login если не залогинен.
+    """
+     
     guard = auth_guard(request)
     if guard:
         return guard
     
-    companies = db.query(OilCompany).all()  # Cписок компаний для выбора в форме
+    companies = db.query(OilCompany).all()  
 
-    # Просто показываем пустую форму, error=None — нет ошибок
     return templates.TemplateResponse(
         request=request,
         name="employees/create.html",
@@ -73,7 +100,6 @@ def create_form(request: Request, db: Session = Depends(get_db)):
     )
 
 
-# POST /employees/create — сохраняем нового сотрудника в БД
 @router.post("/create")
 def create(
     request: Request,
@@ -84,16 +110,33 @@ def create(
     oil_company_id: int = Form(None),  
     db: Session = Depends(get_db),
 ):
+    """
+    Создаёт нового сотрудника в базе данных.
+
+    Проверяет уникальность email перед созданием.
+    Хэширует пароль через bcrypt перед сохранением.
+
+    Args:
+        request (Request): Объект текущего HTTP запроса.
+        name (str): Имя сотрудника из формы.
+        email (str): Email сотрудника из формы.
+        position (str): Должность сотрудника из формы.
+        password (str): Пароль сотрудника из формы.
+        oil_company_id (int): ID компании из формы (необязательно).
+        db (Session): Сессия базы данных.
+
+    Returns:
+        HTMLResponse | RedirectResponse: Форма с ошибкой если email занят,
+        или редирект на /employees/ после успешного создания.
+    """
+
     guard = auth_guard(request)
     if guard:
         return guard
 
-    # Проверяем что email ещё не занят другим сотрудником
-    # SQL: SELECT * FROM employees WHERE email = '...' LIMIT 1
     existing = db.query(Employee).filter(Employee.email == email).first()
     if existing:
         companies = db.query(OilCompany).all() 
-        # Возвращаем форму с ошибкой — не делаем редирект
         return templates.TemplateResponse(
             request=request,
             name="employees/create.html",
@@ -104,13 +147,8 @@ def create(
             },
         )
 
-    # Хэшируем пароль перед сохранением
-    # gensalt() — генерирует случайную соль, делает каждый хэш уникальным
-    # .encode() — строка в байты (bcrypt требует байты)
-    # .decode() — байты обратно в строку для хранения в БД
     hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
-    # Создаём объект сотрудника
     emp = Employee(
         name=name,
         email=email,
@@ -119,30 +157,37 @@ def create(
         oil_company_id=oil_company_id
     )
 
-    db.add(emp)     # добавляем в сессию (ещё не в БД)
-    db.commit()     # сохраняем в БД — теперь сотрудник в таблице
+    db.add(emp)    
+    db.commit()     
 
-    # После создания отправляем на список сотрудников
     return RedirectResponse(url="/employees/", status_code=302)
 
 
-# GET /employees/edit/{emp_id} — форма редактирования сотрудника
-# {emp_id} — динамический параметр в URL, например /employees/edit/3
 @router.get("/edit/{emp_id}", response_class=HTMLResponse)
 def edit_form(emp_id: int, request: Request, db: Session = Depends(get_db)):
+    """
+    Отображает форму редактирования сотрудника.
+
+    Args:
+        emp_id (int): ID сотрудника из URL.
+        request (Request): Объект текущего HTTP запроса.
+        db (Session): Сессия базы данных.
+
+    Returns:
+        HTMLResponse | RedirectResponse: Форма редактирования сотрудника,
+        редирект на /employees/ если сотрудник не найден,
+        или редирект на /login если не залогинен.
+    """
+
     guard = auth_guard(request)
     if guard:
         return guard
 
-    # Ищем сотрудника по id
-    # SQL: SELECT * FROM employees WHERE id = 3 LIMIT 1
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
     companies = db.query(OilCompany).all()  
-    # Если сотрудник не найден — отправляем на список (не падаем с ошибкой)
     if not emp:
         return RedirectResponse(url="/employees/", status_code=302)
 
-    # Передаём найденного сотрудника в шаблон — форма заполнится его данными
     return templates.TemplateResponse(
         request=request,
         name="employees/edit.html",
@@ -155,7 +200,6 @@ def edit_form(emp_id: int, request: Request, db: Session = Depends(get_db)):
     )
 
 
-# POST /employees/edit/{emp_id} — сохраняем изменения сотрудника
 @router.post("/edit/{emp_id}")
 def edit(
     emp_id: int,
@@ -166,52 +210,84 @@ def edit(
     oil_company_id: int = Form(None),
     db: Session = Depends(get_db),
 ):
+    """
+    Сохраняет изменения сотрудника в базе данных.
+
+    Args:
+        emp_id (int): ID сотрудника из URL.
+        request (Request): Объект текущего HTTP запроса.
+        name (str): Новое имя сотрудника из формы.
+        email (str): Новый email сотрудника из формы.
+        position (str): Новая должность сотрудника из формы.
+        oil_company_id (int): Новый ID компании из формы (необязательно).
+        db (Session): Сессия базы данных.
+
+    Returns:
+        HTMLResponse | RedirectResponse: Редирект на страницу сотрудника
+        после успешного обновления или редирект на /employees/ если не найден.
+    """
+
     guard = auth_guard(request)
     if guard:
         return guard
-
-    # Находим сотрудника которого редактируем
+    
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
     if not emp:
         return RedirectResponse(url="/employees/", status_code=302)
 
-    # Обновляем поля — SQLAlchemy отслеживает изменения объекта
     emp.name = name
     emp.email = email
     emp.position = position
     emp.oil_company_id = oil_company_id
     
-    # Сохраняем изменения в БД
     db.commit()
 
-    # После редактирования отправляем на страницу просмотра этого сотрудника
     return RedirectResponse(url=f"/employees/{emp_id}", status_code=302)
 
 
-# GET /employees/delete/{emp_id} — удаляем сотрудника
+
 @router.get("/delete/{emp_id}")
 def delete(emp_id: int, request: Request, db: Session = Depends(get_db)):
+    """
+    Удаляет сотрудника из базы данных.
+
+    Args:
+        emp_id (int): ID сотрудника из URL.
+        request (Request): Объект текущего HTTP запроса.
+        db (Session): Сессия базы данных.
+
+    Returns:
+        RedirectResponse: Редирект на /employees/ после удаления.
+    """
+
     guard = auth_guard(request)
     if guard:
         return guard
 
-    # Находим сотрудника
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
 
-    # Удаляем только если нашли (защита от повторного удаления)
     if emp:
-        db.delete(emp)  # помечаем на удаление
-        db.commit()     # выполняем удаление в БД
+        db.delete(emp)  
+        db.commit()     
 
-    # Возвращаемся на список
     return RedirectResponse(url="/employees/", status_code=302)
 
 
-# GET /employees/{emp_id} — страница просмотра одного сотрудника
-# ВАЖНО: этот роут должен быть ПОСЛЕДНИМ — иначе /edit и /delete
-# будут восприниматься как {emp_id} и не будут работать
 @router.get("/{emp_id}", response_class=HTMLResponse)
 def show(emp_id: int, request: Request, db: Session = Depends(get_db)):
+    """
+    Отображает страницу просмотра одного сотрудника.
+
+    Args:
+        emp_id (int): ID сотрудника из URL.
+        request (Request): Объект текущего HTTP запроса.
+        db (Session): Сессия базы данных.
+
+    Returns:
+        HTMLResponse | RedirectResponse: Страница сотрудника
+        или редирект на /employees/ если не найден.
+    """
+    
     guard = auth_guard(request)
     if guard:
         return guard

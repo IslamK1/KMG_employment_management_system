@@ -9,3 +9,11 @@ run:
 
 migrate:
 	alembic upgrade head
+	
+format:
+	ruff format .
+	ruff check . --fix
+
+format-check:
+	ruff format . --check
+	ruff check .
