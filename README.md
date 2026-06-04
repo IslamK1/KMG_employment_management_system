@@ -13,6 +13,7 @@
 - **Jinja2** — HTML шаблоны
 - **bcrypt** — хэширование паролей
 - **Faker** — генерация тестовых данных
+- **Ruff** — линтер и форматтер кода (PEP-8)
 - **Starlette Sessions** — сессионная авторизация
 
 ---
@@ -25,6 +26,7 @@
 - Привязка сотрудников и скважин к нефтяным компаниям
 - Автоматическая генерация тестовых данных через Faker
 - Суточные производственные показатели скважин за 365 дней
+- Bulk Insert для быстрой вставки больших объёмов данных
 
 ---
 
@@ -33,19 +35,32 @@
     employee-management-system/
     │
     ├── app/
-    │   ├── main.py              # Точка входа, подключение роутеров и middleware
-    │   ├── database.py          # Подключение к БД, сессии
-    │   ├── auth.py              # Роуты авторизации (login/logout)
-    │   ├── employee_routes.py   # CRUD роуты сотрудников
-    │   ├── dependencies.py      # Проверка авторизации
-    │   └── models/
-    │       ├── __init__.py
-    │       ├── employee.py      # Модель сотрудника
-    │       ├── oil_company.py   # Модель нефтяной компании
-    │       ├── well.py          # Модель скважины
-    │       └── daily_production.py  # Модель суточных показателей
+    │   ├── routers/
+    │   │   ├── __init__.py
+    │   │   ├── auth.py              # Роуты авторизации (login/logout)
+    │   │   └── employees.py         # CRUD роуты сотрудников
+    │   │
+    │   ├── models/
+    │   │   ├── __init__.py
+    │   │   ├── employee.py          # Модель сотрудника
+    │   │   ├── oil_company.py       # Модель нефтяной компании
+    │   │   ├── well.py              # Модель скважины
+    │   │   └── daily_production.py  # Модель суточных показателей
+    │   │
+    │   ├── __init__.py
+    │   ├── main.py                  # Точка входа приложения
+    │   ├── database.py              # Подключение к БД, сессии
+    │   └── dependencies.py          # Проверка авторизации
     │
-    ├── migrations/              # Alembic миграции
+    ├── seeders/
+    │   ├── seed.py                  # Создание admin пользователя
+    │   └── seed_data.py             # Генерация тестовых данных
+    │
+    ├── providers/
+    │   ├── __init__.py
+    │   └── oil_provider.py          # Кастомный Faker провайдер
+    │
+    ├── migrations/                  # Alembic миграции
     │   └── versions/
     │
     ├── templates/
@@ -59,10 +74,11 @@
     ├── static/
     │   └── style.css
     │
-    ├── seed.py                  # Создание admin пользователя
-    ├── seed_data.py             # Генерация тестовых данных
+    ├── Makefile                     # Команды для запуска проекта
+    ├── ruff.toml                    # Конфиг линтера
+    ├── alembic.ini                  # Конфиг миграций
     ├── requirements.txt
-    ├── .env                     # Переменные окружения (не в git)
+    ├── .env                         # Переменные окружения (не в git)
     ├── .gitignore
     └── README.md
 
@@ -87,7 +103,7 @@ cd employee-management-system
 ### 2. Создать виртуальную среду
 
 ```bash
-python -m venv venv
+python -m venv .venv
 ```
 
 Mac/Linux:
@@ -110,7 +126,7 @@ pip install -r requirements.txt
 
 ### 4. Создать .env файл и положить туда ссылку на базу данных
 
-```Создайте файл .env в корне проекта
+```Создайте файл .env в корне проекта с данным содержимым внутри:
 DATABASE_URL=postgresql://postgres:ТВОй_ПАРОЛЬ@localhost:5432/employee_management
 ```
 
@@ -123,25 +139,25 @@ CREATE DATABASE employee_management;
 ### 6. Применить миграции
 
 ```bash
-alembic upgrade head
+make migrate
 ```
 
 ### 7. Создать admin пользователя
 
 ```bash
-python seed.py
+make seed
 ```
 
 ### 8. Заполнить базу тестовыми данными (опционально)
 
 ```bash
-python seed_data.py
+make data
 ```
 
 ### 9. Запустить сервер
 
 ```bash
-uvicorn app.main:app --reload
+make run 
 ```
 
 Открыть в браузере: **http://127.0.0.1:8000**
@@ -152,6 +168,19 @@ uvicorn app.main:app --reload
 
 Email:    admin@mail.ru
 Пароль:   12345
+
+---
+
+## Команды Makefile
+
+| Команда | Описание |
+|---------|----------|
+| `make run` | Запустить сервер |
+| `make migrate` | Применить миграции |
+| `make seed` | Создать admin пользователя |
+| `make data` | Заполнить БД тестовыми данными |
+| `make format` | Форматировать код через Ruff |
+| `make format-check` | Проверить код без изменений |
 
 ---
 
