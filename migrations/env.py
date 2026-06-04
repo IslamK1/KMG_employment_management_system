@@ -1,13 +1,11 @@
 import os
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+
 from alembic import context
-from app.database import Base
-from app.models import OilCompany, Well, Employee, DailyProduction 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
+from app.database import Base
 
 load_dotenv()
 
@@ -66,9 +64,7 @@ def run_migrations_online() -> None:
     connectable = create_engine(os.getenv("DATABASE_URL"))
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

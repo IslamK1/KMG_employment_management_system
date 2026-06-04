@@ -6,18 +6,17 @@
 """
 
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from app.database import Base, engine
-from app.routers import auth_router, emp_router
 
+from app.routers import auth_router, emp_router
 
 app = FastAPI(title="Employee Management System")
 
 app.add_middleware(
     SessionMiddleware,
-    secret_key="a3f8e2c1b9d4f7a6e5c2b8d1f4a7e3c6b9d2f5a8e1c4b7d0f3a6e9c2b5d8f1"
+    secret_key="a3f8e2c1b9d4f7a6e5c2b8d1f4a7e3c6b9d2f5a8e1c4b7d0f3a6e9c2b5d8f1",
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -38,5 +37,5 @@ def root():
     Returns:
         RedirectResponse: Редирект на /employees/.
     """
-    
+
     return RedirectResponse(url="/employees/")

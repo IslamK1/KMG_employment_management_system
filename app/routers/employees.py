@@ -4,19 +4,18 @@
 """
 
 import bcrypt
-from fastapi import APIRouter, Request, Depends, Form
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import Employee, OilCompany 
-from app.dependencies import require_auth
 
+from app.database import get_db
+from app.dependencies import require_auth
+from app.models import Employee, OilCompany
 
 router = APIRouter(prefix="/employees")
 
 templates = Jinja2Templates(directory="templates")
-
 
 
 def auth_guard(request: Request):
@@ -33,12 +32,12 @@ def auth_guard(request: Request):
         RedirectResponse | None: Редирект на /login или None если залогинен.
     """
 
-    result = require_auth(request)  
+    result = require_auth(request)
 
     if isinstance(result, RedirectResponse):
-        return result  
+        return result
 
-    return None 
+    return None
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -64,10 +63,7 @@ def index(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request=request,
         name="employees/index.html",
-        context={
-            "employees": employees,
-            "user": request.session.get("user_name")
-        },
+        context={"employees": employees, "user": request.session.get("user_name")},
     )
 
 
@@ -84,19 +80,21 @@ def create_form(request: Request, db: Session = Depends(get_db)):
         HTMLResponse | RedirectResponse: Форма создания сотрудника
         или редирект на /login если не залогинен.
     """
-     
+
     guard = auth_guard(request)
     if guard:
         return guard
-    
-    companies = db.query(OilCompany).all()  
+
+    companies = db.query(OilCompany).all()
 
     return templates.TemplateResponse(
         request=request,
         name="employees/create.html",
-        context= {"error": None, 
-         "user": request.session.get("user_name")
-         , "companies": companies},
+        context={
+            "error": None,
+            "user": request.session.get("user_name"),
+            "companies": companies,
+        },
     )
 
 
@@ -105,9 +103,9 @@ def create(
     request: Request,
     name: str = Form(...),
     email: str = Form(...),
-    position: str = Form(""),   
+    position: str = Form(""),
     password: str = Form(...),
-    oil_company_id: int = Form(None),  
+    oil_company_id: int = Form(None),
     db: Session = Depends(get_db),
 ):
     """
@@ -136,14 +134,14 @@ def create(
 
     existing = db.query(Employee).filter(Employee.email == email).first()
     if existing:
-        companies = db.query(OilCompany).all() 
+        companies = db.query(OilCompany).all()
         return templates.TemplateResponse(
             request=request,
             name="employees/create.html",
             context={
                 "error": "Email уже занят",
                 "user": request.session.get("user_name"),
-                "companies": companies 
+                "companies": companies,
             },
         )
 
@@ -154,11 +152,11 @@ def create(
         email=email,
         position=position,
         password=hashed_password,
-        oil_company_id=oil_company_id
+        oil_company_id=oil_company_id,
     )
 
-    db.add(emp)    
-    db.commit()     
+    db.add(emp)
+    db.commit()
 
     return RedirectResponse(url="/employees/", status_code=302)
 
@@ -184,7 +182,7 @@ def edit_form(emp_id: int, request: Request, db: Session = Depends(get_db)):
         return guard
 
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
-    companies = db.query(OilCompany).all()  
+    companies = db.query(OilCompany).all()
     if not emp:
         return RedirectResponse(url="/employees/", status_code=302)
 
@@ -195,7 +193,7 @@ def edit_form(emp_id: int, request: Request, db: Session = Depends(get_db)):
             "emp": emp,
             "error": None,
             "user": request.session.get("user_name"),
-            "companies": companies 
+            "companies": companies,
         },
     )
 
@@ -230,7 +228,7 @@ def edit(
     guard = auth_guard(request)
     if guard:
         return guard
-    
+
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
     if not emp:
         return RedirectResponse(url="/employees/", status_code=302)
@@ -239,11 +237,10 @@ def edit(
     emp.email = email
     emp.position = position
     emp.oil_company_id = oil_company_id
-    
+
     db.commit()
 
     return RedirectResponse(url=f"/employees/{emp_id}", status_code=302)
-
 
 
 @router.get("/delete/{emp_id}")
@@ -267,8 +264,8 @@ def delete(emp_id: int, request: Request, db: Session = Depends(get_db)):
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
 
     if emp:
-        db.delete(emp)  
-        db.commit()     
+        db.delete(emp)
+        db.commit()
 
     return RedirectResponse(url="/employees/", status_code=302)
 
@@ -287,7 +284,7 @@ def show(emp_id: int, request: Request, db: Session = Depends(get_db)):
         HTMLResponse | RedirectResponse: Страница сотрудника
         или редирект на /employees/ если не найден.
     """
-    
+
     guard = auth_guard(request)
     if guard:
         return guard

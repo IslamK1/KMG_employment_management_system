@@ -2,18 +2,19 @@
 Модуль модели суточных производственных показателей.
 """
 
-from sqlalchemy import Column, Date, Float, Integer, String, ForeignKey
+from sqlalchemy import Column, Date, Float, ForeignKey, Integer
 from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
-class DailyProduction(Base): 
+class DailyProduction(Base):
     """
     Модель суточных производственных показателей скважины.
-    
+
     Хранит данные о добыче нефти по каждой скважине за каждый день.
     Используется для построения аналитических дашбордов.
-    
+
     Aттрибуты:
         id (int): Уникальный идентификатор записи.
         date (date): Дата производственного показателя.

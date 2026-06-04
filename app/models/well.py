@@ -2,17 +2,18 @@
 Модуль модели скважины.
 """
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
 class Well(Base):
     """
     Модель буровой скважины.
-    
+
     Представляет буровую скважину принадлежащую нефтяной компании.
-    
+
     Aттрибуты:
         id (int): Уникальный идентификатор скважины.
         name (str): Название скважины.

@@ -1,5 +1,11 @@
-#Импорт моделей для использования в других частях приложения
-from app.models.oil_company import OilCompany
-from app.models.well import Well
-from app.models.employee import Employee
-from app.models.daily_production import DailyProduction
+"""
+Пакет моделей приложения.
+Экспортирует все модели для удобного импорта из других модулей.
+"""
+
+from app.models.daily_production import DailyProduction as DailyProduction
+from app.models.employee import Employee as Employee
+from app.models.oil_company import OilCompany as OilCompany
+from app.models.well import Well as Well
+
+__all__ = ["DailyProduction", "Employee", "OilCompany", "Well"]

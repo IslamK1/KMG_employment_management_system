@@ -4,16 +4,17 @@
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
 class OilCompany(Base):
     """
     Модель нефтяной компании.
-    
+
     Представляет нефтяную компанию в системе.
     Является родительской сущностью для сотрудников и скважин.
-    
+
     Aттрибуты:
         id (int): Уникальный идентификатор компании.
         name (str): Название компании.

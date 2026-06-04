@@ -2,18 +2,19 @@
 Модуль модели сотрудника.
 """
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
 class Employee(Base):
     """
     Модель сотрудника.
-    
+
     Представляет сотрудника компании в системе управления.
     Используется как для авторизации так и для управления персоналом.
-    
+
     Aттрибуты:
         id (int): Уникальный идентификатор сотрудника.
         name (str): Полное имя сотрудника.

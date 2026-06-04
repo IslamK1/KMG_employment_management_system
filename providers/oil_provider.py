@@ -5,6 +5,7 @@
 
 from faker.providers import BaseProvider
 
+
 class OilProvider(BaseProvider):
     """
     Кастомный провайдер Faker для генерации данных нефтяной отрасли.
@@ -23,9 +24,8 @@ class OilProvider(BaseProvider):
         >>> fake.well_type()
         'нефтяная'
     """
-    
-    well_types = ["нефтяная", "газовая", "разведочная", "нагнетальная"]
 
+    well_types = ["нефтяная", "газовая", "разведочная", "нагнетальная"]
 
     def well_type(self) -> str:
         """
