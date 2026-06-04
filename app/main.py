@@ -10,8 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 from app.database import Base, engine
-from app.auth import router as auth_router
-from app.employee_routes import router as emp_router
+from app.routers import auth_router, emp_router
 
 
 app = FastAPI(title="Employee Management System")

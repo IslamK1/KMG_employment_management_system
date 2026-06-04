@@ -1,8 +1,8 @@
 data:
-	python seed_data.py
+	python -m seeders.seed_data
 
 seed:
-	python seed.py
+	python -m seeders.seed
 
 run:
 	uvicorn app.main:app --reload

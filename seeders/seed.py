@@ -2,6 +2,7 @@ import bcrypt
 from app.database import SessionLocal, engine, Base
 from app.models import Employee
 
+
 Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()

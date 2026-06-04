@@ -1,16 +1,14 @@
+import os
 from logging.config import fileConfig
-
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-
 from alembic import context
-
 from app.database import Base
-from app.models import OilCompany, Well, Employee   
-
-import os
+from app.models import OilCompany, Well, Employee, DailyProduction 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+
+
 load_dotenv()
 
 # this is the Alembic Config object, which provides

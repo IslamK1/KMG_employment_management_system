@@ -1,29 +1,20 @@
 import random
+import bcrypt
 from datetime import date, timedelta
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.database import SessionLocal
 from app.models import OilCompany, Well, Employee, DailyProduction
-
-import bcrypt
 from faker import Faker 
 from faker.providers import BaseProvider
+from providers.oil_provider import OilProvider
 
 
-#Класс провайдера для генерации фейковых скважин 
-class OilProvider(BaseProvider):
-    
-    well_types = ["нефтяная", "газовая", "разведочная", "нагнетальная"]
 
-    def well_type(self) -> str:
-        return self.random_element(self.well_types)
-    
+fake = Faker("ru_RU")
+fake.add_provider(OilProvider) 
 
-fake = Faker("ru_RU") #Инициализация Faker с русской локализацией
-fake.add_provider(OilProvider) #Добавление кастомного провайдера для генерации типов скважин
+db = SessionLocal() 
 
-db = SessionLocal() #Создание сессии для работы с базой данных
-
-#Очищение таблиц перед заполнением
 db.query(DailyProduction).delete()
 db.query(Well).delete()
 db.query(Employee).delete()
@@ -31,7 +22,6 @@ db.query(OilCompany).delete()
 db.commit()
 
 
-#Создание 22 компаний с уникальными названиями и регионами
 companies = []
 for _ in range(22):
     company = OilCompany(
@@ -46,8 +36,6 @@ db.commit()
 print(f"Создано компаний: {len(companies)}")
 
 
-#Для каждой компании создается от 2 до 5 сотрудников 
-#с одинаковым паролем "12345" (хэшируется с помощью bcrypt)
 hashed_password = bcrypt.hashpw("12345".encode(), bcrypt.gensalt()).decode()
 
 employee_count = 0
@@ -68,7 +56,6 @@ db.commit()
 print(f"Создано сотрудников: {employee_count}")
 
 
-#Для каждой компании создается от 2 до 10 скважин
 wells = []
 for company in companies:
     num_wells = random.randint(2, 10)
@@ -86,12 +73,10 @@ db.commit()
 print(f"Создано скважин: {len(wells)}")
 
 
-#Берутся первые 3-5 компаний, для них первые 5 скважин 
 num_companies_for_production = random.randint(3, 5)
 target_companies = companies[:num_companies_for_production]
 
 
-#Для каждой из этих компаний берутся первые 5 скважин по ID
 target_wells = []
 for company in target_companies:
     company_wells = (
@@ -106,7 +91,6 @@ for company in target_companies:
 print(f"Скважин для генерации показателей: {len(target_wells)}")
 
 
-#Генерация суточных показателей за 365 дней — Bulk Insert 
 today = date.today()
 
 bulk_records = []
@@ -120,7 +104,6 @@ for well in target_wells:
         })
 
 
-#Bulk insert — все записи вставляются одним запросом
 bulk_insert = pg_insert(DailyProduction).values(bulk_records).on_conflict_do_nothing()
 db.execute(bulk_insert)
 db.commit()

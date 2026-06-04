@@ -6,6 +6,7 @@ from sqlalchemy import Column, Date, Float, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
 
+
 class DailyProduction(Base): 
     """
     Модель суточных производственных показателей скважины.
