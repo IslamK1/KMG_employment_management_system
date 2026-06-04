@@ -8,10 +8,13 @@
 <body>
 
   <nav class="navbar">
+    <div class="nav-left">
+      <a href="javascript:history.back()" class="btn btn-sm">Назад</a>
+      <a href="/employees/" class="btn btn-sm">Главная</a>
+    </div>
     <div class="nav-brand">EMS</div>
-    <div class="nav-links">
-      <a href="/employees/" class="btn btn-sm">Список</a>
-      <a href="/logout" class="btn btn-danger btn-sm">Выйти</a>
+    <div class="nav-right">
+      <a href="/logout" class="btn btn-danger btn-sm">Выход</a>
     </div>
   </nav>
 
@@ -22,14 +25,8 @@
       <div class="detail-row"><span class="label">ID:</span> {{ emp.id }}</div>
       <div class="detail-row"><span class="label">Email:</span> {{ emp.email }}</div>
       <div class="detail-row"><span class="label">Должность:</span> {{ emp.position or "—" }}</div>
-      <div class="detail-row">
-        <span class="label">Компания:</span>
-        {{ emp.oil_company.name if emp.oil_company else "—" }}
-      </div>
-      <div class="detail-row">
-        <span class="label">Регион:</span>
-        {{ emp.oil_company.region if emp.oil_company else "—" }}
-      </div>
+      <div class="detail-row"><span class="label">Компания:</span> {{ emp.oil_company.name if emp.oil_company else "—" }}</div>
+      <div class="detail-row"><span class="label">Регион:</span> {{ emp.oil_company.region if emp.oil_company else "—" }}</div>
     </div>
 
     <div class="form-actions" style="margin-top:1rem">

@@ -8,10 +8,13 @@
 <body>
 
   <nav class="navbar">
+    <div class="nav-left">
+      <a href="javascript:history.back()" class="btn btn-sm">Назад</a>
+      <a href="/employees/" class="btn btn-sm">Главная</a>
+    </div>
     <div class="nav-brand">EMS</div>
-    <div class="nav-links">
-      <a href="/employees/" class="btn btn-sm">Назад</a>
-      <a href="/logout" class="btn btn-danger btn-sm">Выйти</a>
+    <div class="nav-right">
+      <a href="/logout" class="btn btn-danger btn-sm">Выход</a>
     </div>
   </nav>
 
@@ -37,21 +40,21 @@
           <input type="text" name="position" placeholder="Backend Developer">
         </div>
         <div class="form-group">
-          <label>Пароль</label>
-          <input type="password" name="password" required>
-        </div>
-        <div class="form-group">
           <label>Компания</label>
           <select name="oil_company_id" class="form-select">
-            <option value="">— Не выбрано —</option>
+            <option value="">Не выбрано</option>
             {% for company in companies %}
             <option value="{{ company.id }}">{{ company.name }} ({{ company.region }})</option>
             {% endfor %}
           </select>
         </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" name="password" required>
+        </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Создать</button>
-          <a href="/employees/" class="btn">Отмена</a>
+          <a href="javascript:history.back()" class="btn">Отмена</a>
         </div>
       </form>
     </div>
