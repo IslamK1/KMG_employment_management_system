@@ -1,16 +1,15 @@
 """
-Модуль авторизации.
-Содержит маршруты для входа и выхода из системы.
+Маршруты авторизации.
+Роутер принимает запросы и делегирует логику в auth_service.
 """
 
-import bcrypt
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Employee
+from app.services import authenticate_employee
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -21,18 +20,16 @@ def login_page(request: Request):
     """
     Отображает страницу входа.
 
-    Если пользователь уже залогинен — перенаправляет на список сотрудников.
+    Если пользователь уже залогинен — перенаправляет на /employees/.
 
     Args:
         request (Request): Объект текущего HTTP запроса.
 
     Returns:
-        HTMLResponse | RedirectResponse: Страница входа или редирект на /employees/.
+        HTMLResponse | RedirectResponse: Страница входа или редирект.
     """
-
     if request.session.get("user"):
         return RedirectResponse(url="/employees/", status_code=302)
-
     return templates.TemplateResponse(
         request=request, name="login.html", context={"error": None}
     )
@@ -48,9 +45,8 @@ def login(
     """
     Обрабатывает форму входа.
 
-    Проверяет email и пароль пользователя.
-    При успехе создаёт сессию и перенаправляет на дашборд.
-    При ошибке возвращает форму с сообщением об ошибке.
+    Делегирует проверку credentials в auth_service.
+    При успехе создаёт сессию и редиректит на дашборд.
 
     Args:
         request (Request): Объект текущего HTTP запроса.
@@ -61,12 +57,8 @@ def login(
     Returns:
         HTMLResponse | RedirectResponse: Форма с ошибкой или редирект на /employees/.
     """
-
-    employee = db.query(Employee).filter(Employee.email == email).first()
-
-    if not employee or not bcrypt.checkpw(
-        password.encode(), employee.password.encode()
-    ):
+    employee = authenticate_employee(db, email, password)
+    if not employee:
         return templates.TemplateResponse(
             request=request,
             name="login.html",
@@ -75,7 +67,6 @@ def login(
 
     request.session["user"] = employee.email
     request.session["user_name"] = employee.name
-
     return RedirectResponse(url="/employees/", status_code=302)
 
 
@@ -84,7 +75,7 @@ def logout(request: Request):
     """
     Выполняет выход из системы.
 
-    Очищает сессию пользователя и перенаправляет на страницу входа.
+    Очищает сессию и редиректит на страницу входа.
 
     Args:
         request (Request): Объект текущего HTTP запроса.
@@ -92,7 +83,5 @@ def logout(request: Request):
     Returns:
         RedirectResponse: Редирект на /login.
     """
-
     request.session.clear()
-
     return RedirectResponse(url="/login", status_code=302)

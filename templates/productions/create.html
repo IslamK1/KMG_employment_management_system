@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Новый рапорт{% endblock %}
+
+{% block content %}
+  <h1>Новый суточный рапорт</h1>
+
+  {% if error %}
+    <div class="alert error">{{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <form method="post" action="/productions/create">
+      <div class="form-group">
+        <label>Скважина</label>
+        <select name="well_id" class="form-select" required>
+          <option value="">Выберите скважину</option>
+          {% for well in wells %}
+          <option value="{{ well.id }}">{{ well.name }} ({{ well.type }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Дата</label>
+        <input type="date" name="report_date" value="{{ today }}" required>
+      </div>
+      <div class="form-group">
+        <label>Время работы (часы, 0-24)</label>
+        <input type="number" name="working_hours"
+               min="0" max="24" step="0.1"
+               placeholder="24" required>
+      </div>
+      <div class="form-group">
+        <label>Объём жидкости (тонн)</label>
+        <input type="number" name="liquid_volume"
+               min="0" step="0.01"
+               placeholder="150.5" required>
+      </div>
+      <div class="form-group">
+        <label>Обводненность (%, 0-100)</label>
+        <input type="number" name="water_cut"
+               min="0" max="100" step="0.1"
+               placeholder="25.5" required>
+      </div>
+      <div class="form-group">
+        <label>Плотность нефти (г/см³)</label>
+        <input type="number" name="density"
+               min="0.7" max="1.0" step="0.001"
+               placeholder="0.86" value="0.86" required>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Сохранить рапорт</button>
+        <a href="/productions/" class="btn">Отмена</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

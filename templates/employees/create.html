@@ -1,64 +1,45 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Новый сотрудник</title>
-  <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+{% extends "base.html" %}
 
-  <nav class="navbar">
-    <div class="nav-left">
-      <a href="javascript:history.back()" class="btn btn-sm">Назад</a>
-      <a href="/employees/" class="btn btn-sm">Главная</a>
-    </div>
-    <div class="nav-brand">EMS</div>
-    <div class="nav-right">
-      <a href="/logout" class="btn btn-danger btn-sm">Выход</a>
-    </div>
-  </nav>
+{% block title %}Новый сотрудник{% endblock %}
 
-  <main class="container">
-    <h1>Новый сотрудник</h1>
+{% block content %}
+  <h1>Новый сотрудник</h1>
 
-    {% if error %}
-      <div class="alert error">{{ error }}</div>
-    {% endif %}
+  {% if error %}
+    <div class="alert error">{{ error }}</div>
+  {% endif %}
 
-    <div class="card">
-      <form method="post" action="/employees/create">
-        <div class="form-group">
-          <label>Имя</label>
-          <input type="text" name="name" placeholder="Иван Иванов" required>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" name="email" placeholder="ivan@company.com" required>
-        </div>
-        <div class="form-group">
-          <label>Должность</label>
-          <input type="text" name="position" placeholder="Backend Developer">
-        </div>
-        <div class="form-group">
-          <label>Компания</label>
-          <select name="oil_company_id" class="form-select">
-            <option value="">Не выбрано</option>
-            {% for company in companies %}
-            <option value="{{ company.id }}">{{ company.name }} ({{ company.region }})</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Пароль</label>
-          <input type="password" name="password" required>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Создать</button>
-          <a href="javascript:history.back()" class="btn">Отмена</a>
-        </div>
-      </form>
-    </div>
-  </main>
-
-</body>
-</html>
+  <div class="card">
+    <form method="post" action="/employees/create">
+      <div class="form-group">
+        <label>Имя</label>
+        <input type="text" name="name" placeholder="Иван Иванов" required>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="ivan@company.com" required>
+      </div>
+      <div class="form-group">
+        <label>Должность</label>
+        <input type="text" name="position" placeholder="Backend Developer">
+      </div>
+      <div class="form-group">
+        <label>Компания</label>
+        <select name="oil_company_id" class="form-select">
+          <option value="">Не выбрано</option>
+          {% for company in companies %}
+          <option value="{{ company.id }}">{{ company.name }} ({{ company.region }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Пароль</label>
+        <input type="password" name="password" required>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Создать</button>
+        <a href="/employees/" class="btn">Отмена</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
