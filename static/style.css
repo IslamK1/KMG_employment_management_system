@@ -107,7 +107,6 @@ a { text-decoration: none; color: inherit; }
   white-space: nowrap;
 }
 
-
 /* ── Buttons ── */
 .btn {
   display: inline-block;
@@ -211,3 +210,43 @@ a { text-decoration: none; color: inherit; }
   font-size: 1rem;
 }
 .empty-state a { color: #4f46e5; font-weight: 600; }
+
+/* ── Pagination ── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.pagination .btn {
+  min-width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .95rem;
+  padding: .5rem 1rem;
+}
+
+.pagination-dots {
+  padding: .35rem .5rem;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.pagination-info {
+  width: 100%;
+  text-align: center;
+  font-size: .9rem;
+  color: #64748b;
+  margin-top: .5rem;
+}
+
+.btn.disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  pointer-events: none;
+}

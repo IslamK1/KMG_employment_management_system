@@ -44,6 +44,7 @@
       {% endfor %}
     </tbody>
   </table>
+  {% include "partials/pagination.html" %}
   {% else %}
     <div class="empty-state">
       Рапортов пока нет. <a href="/productions/create">Добавить первый</a>

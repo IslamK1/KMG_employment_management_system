@@ -157,3 +157,27 @@ def delete_employee(db: Session, emp_id: int) -> bool:
     db.delete(emp)
     db.commit()
     return True
+
+
+def get_employees_paginated(
+    db: Session, page: int = 1, per_page: int = 10
+) -> tuple[list[Employee], int]:
+    """
+    Возвращает сотрудников с пагинацией.
+
+    Args:
+        db (Session): Сессия базы данных.
+        page (int): Номер страницы.
+        per_page (int): Количество записей на странице.
+
+    Returns:
+        tuple: (список сотрудников, общее количество).
+    """
+    total = db.query(Employee).count()
+    employees = (
+        db.query(Employee)
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+    return employees, total

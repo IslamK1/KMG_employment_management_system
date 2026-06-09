@@ -4,7 +4,7 @@
 Авторизация проверяется автоматически через Depends(require_auth).
 """
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -18,6 +18,7 @@ from app.services import (
     get_all_employees,
     get_employee_by_id,
     update_employee,
+    get_employees_paginated, 
 )
 
 # Все маршруты защищены через require_auth автоматически
@@ -26,17 +27,28 @@ templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/", response_class=HTMLResponse)
-def index(request: Request, db: Session = Depends(get_db)):
-    """Список всех сотрудников."""
+def index(
+    request: Request,
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(10, ge=1, le=100),
+):
+    """Список всех сотрудников с пагинацией."""
+    employees, total = get_employees_paginated(db, page, per_page)
+    total_pages = (total + per_page - 1) // per_page
+
     return templates.TemplateResponse(
         request=request,
         name="employees/index.html",
         context={
-            "employees": get_all_employees(db),
+            "employees": employees,
             "user": request.session.get("user_name"),
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
         },
     )
-
 
 @router.get("/create", response_class=HTMLResponse)
 def create_form(request: Request, db: Session = Depends(get_db)):

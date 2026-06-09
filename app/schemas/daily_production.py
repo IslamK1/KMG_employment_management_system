@@ -33,7 +33,7 @@ class DailyProductionCreate(BaseModel):
     @classmethod
     def validate_working_hours(cls, v: float) -> float:
         """Проверяет что время работы в диапазоне 0-24 часа."""
-        if not 0 <= v <= 24:
+        if not 0 <= v < 24:
             raise ValueError("Время работы должно быть от 0 до 24 часов")
         return v
 

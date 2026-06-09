@@ -4,7 +4,7 @@
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -18,6 +18,7 @@ from app.services import (
     get_all_reports,
     get_all_wells,
     get_report_by_id,
+    get_reports_paginated,
 )
 
 router = APIRouter(
@@ -28,15 +29,26 @@ templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/", response_class=HTMLResponse)
-def index(request: Request, db: Session = Depends(get_db)):
-    """Сводная таблица всех суточных рапортов."""
-    reports = get_all_reports(db)
+def index(
+    request: Request,
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(10, ge=1, le=100),
+):
+    """Сводная таблица рапортов с пагинацией."""
+    reports, total = get_reports_paginated(db, page, per_page)
+    total_pages = (total + per_page - 1) // per_page
+
     return templates.TemplateResponse(
         request=request,
         name="productions/index.html",
         context={
             "reports": reports,
             "user": request.session.get("user_name"),
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
         },
     )
 

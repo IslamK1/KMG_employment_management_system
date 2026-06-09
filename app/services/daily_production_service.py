@@ -128,3 +128,28 @@ def get_all_wells(db: Session) -> list[Well]:
         list[Well]: Список всех скважин.
     """
     return db.query(Well).all()
+
+
+def get_reports_paginated(
+    db: Session, page: int = 1, per_page: int = 10
+) -> tuple[list[DailyProduction], int]:
+    """
+    Возвращает рапорты с пагинацией.
+
+    Args:
+        db (Session): Сессия базы данных.
+        page (int): Номер страницы.
+        per_page (int): Количество записей на странице.
+
+    Returns:
+        tuple: (список рапортов, общее количество).
+    """
+    total = db.query(DailyProduction).count()
+    reports = (
+        db.query(DailyProduction)
+        .order_by(DailyProduction.date.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+    return reports, total
