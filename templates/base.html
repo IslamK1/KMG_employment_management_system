@@ -2,16 +2,19 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>{% block title %}EMS{% endblock %}</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}EMS{% endblock %} — EMS</title>
+  <link rel="stylesheet" href="/static/style.css?v=2">
 </head>
-<body>
-
-  {% include "partials/navbar.html" %}
-
-  <main class="container">
-    {% block content %}{% endblock %}
-  </main>
-
+<body class="bg-gray-100">
+  <div class="flex min-h-screen">
+    {% include "partials/sidebar.html" %}
+    <div class="flex-1 flex flex-col overflow-hidden">
+      {% include "partials/topbar.html" %}
+      <main class="flex-1 p-8 overflow-auto">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
 </body>
 </html>

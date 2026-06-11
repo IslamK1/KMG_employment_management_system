@@ -3,43 +3,49 @@
 {% block title %}Новый сотрудник{% endblock %}
 
 {% block content %}
-  <h1>Новый сотрудник</h1>
+<div class="max-w-2xl">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">Новый сотрудник</h1>
 
   {% if error %}
-    <div class="alert error">{{ error }}</div>
+  <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-6 text-sm">{{ error }}</div>
   {% endif %}
 
-  <div class="card">
-    <form method="post" action="/employees/create">
-      <div class="form-group">
-        <label>Имя</label>
-        <input type="text" name="name" placeholder="Иван Иванов" required>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+    <form method="post" action="/employees/create" class="space-y-5">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Имя</label>
+        <input type="text" name="name" placeholder="Иван Иванов" required
+               class="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
       </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" name="email" placeholder="ivan@company.com" required>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+        <input type="email" name="email" placeholder="ivan@company.com" required
+               class="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
       </div>
-      <div class="form-group">
-        <label>Должность</label>
-        <input type="text" name="position" placeholder="Backend Developer">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Должность</label>
+        <input type="text" name="position" placeholder="Backend Developer"
+               class="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
       </div>
-      <div class="form-group">
-        <label>Компания</label>
-        <select name="oil_company_id" class="form-select">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Компания</label>
+        <select name="oil_company_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
           <option value="">Не выбрано</option>
           {% for company in companies %}
           <option value="{{ company.id }}">{{ company.name }} ({{ company.region }})</option>
           {% endfor %}
         </select>
       </div>
-      <div class="form-group">
-        <label>Пароль</label>
-        <input type="password" name="password" required>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Пароль</label>
+        <input type="password" name="password" required
+               class="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
       </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Создать</button>
-        <a href="/employees/" class="btn">Отмена</a>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors">Создать</button>
+        <a href="/employees/" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-6 py-3 rounded-lg transition-colors">Отмена</a>
       </div>
     </form>
   </div>
+</div>
 {% endblock %}

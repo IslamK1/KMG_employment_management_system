@@ -3,20 +3,35 @@
 {% block title %}{{ emp.name }}{% endblock %}
 
 {% block content %}
-  <h1>{{ emp.name }}</h1>
+<div class="max-w-2xl">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ emp.name }}</h1>
 
-  <div class="card">
-    <div class="detail-row"><span class="label">ID:</span> {{ emp.id }}</div>
-    <div class="detail-row"><span class="label">Email:</span> {{ emp.email }}</div>
-    <div class="detail-row"><span class="label">Должность:</span> {{ emp.position or "—" }}</div>
-    <div class="detail-row"><span class="label">Компания:</span> {{ emp.oil_company.name if emp.oil_company else "—" }}</div>
-    <div class="detail-row"><span class="label">Регион:</span> {{ emp.oil_company.region if emp.oil_company else "—" }}</div>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 divide-y divide-gray-100">
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-40">ID</span>
+      <span class="text-sm text-gray-900 font-mono">{{ emp.id }}</span>
+    </div>
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-40">Email</span>
+      <span class="text-sm text-gray-900">{{ emp.email }}</span>
+    </div>
+    <div class="flex items-center px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-40">Должность</span>
+      <span class="bg-indigo-50 text-indigo-700 text-xs font-medium px-2.5 py-1 rounded-full">{{ emp.position or "—" }}</span>
+    </div>
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-40">Компания</span>
+      <span class="text-sm text-gray-900">{{ emp.oil_company.name if emp.oil_company else "—" }}</span>
+    </div>
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-40">Регион</span>
+      <span class="text-sm text-gray-900">{{ emp.oil_company.region if emp.oil_company else "—" }}</span>
+    </div>
   </div>
 
-  <div class="form-actions" style="margin-top:1rem">
-    <a href="/employees/edit/{{ emp.id }}" class="btn btn-warning">Редактировать</a>
-    <a href="/employees/delete/{{ emp.id }}"
-       class="btn btn-danger"
-       onclick="return confirm('Удалить?')">Удалить</a>
+  <div class="flex gap-3">
+    <a href="/employees/edit/{{ emp.id }}" class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Редактировать</a>
+    <a href="/employees/delete/{{ emp.id }}" onclick="return confirm('Удалить?')" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Удалить</a>
   </div>
+</div>
 {% endblock %}

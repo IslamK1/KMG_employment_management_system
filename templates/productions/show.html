@@ -3,39 +3,46 @@
 {% block title %}Рапорт №{{ report.id }}{% endblock %}
 
 {% block content %}
-  <h1>Рапорт №{{ report.id }}</h1>
+<div class="max-w-2xl">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">Рапорт №{{ report.id }}</h1>
 
-  <div class="card">
-    <div class="detail-row">
-      <span class="label">Скважина:</span> {{ report.well.name }}
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 divide-y divide-gray-100">
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Скважина</span>
+      <span class="text-sm font-medium text-gray-900">{{ report.well.name }}</span>
     </div>
-    <div class="detail-row">
-      <span class="label">Тип скважины:</span> {{ report.well.type }}
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Тип скважины</span>
+      <span class="text-sm text-gray-900">{{ report.well.type }}</span>
     </div>
-    <div class="detail-row">
-      <span class="label">Дата:</span> {{ report.date }}
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Дата</span>
+      <span class="text-sm text-gray-900">{{ report.date }}</span>
     </div>
-    <div class="detail-row">
-      <span class="label">Время работы:</span> {{ report.working_hours }} ч
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Время работы</span>
+      <span class="text-sm text-gray-900">{{ report.working_hours }} ч</span>
     </div>
-    <div class="detail-row">
-      <span class="label">Объём жидкости:</span> {{ report.liquid_volume }} т
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Объём жидкости</span>
+      <span class="text-sm text-gray-900">{{ report.liquid_volume }} т</span>
     </div>
-    <div class="detail-row">
-      <span class="label">Обводненность:</span> {{ report.water_cut }}%
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Обводненность</span>
+      <span class="text-sm text-gray-900">{{ report.water_cut }}%</span>
     </div>
-    <div class="detail-row">
-      <span class="label">Плотность нефти:</span> {{ report.density }} г/см³
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Плотность нефти</span>
+      <span class="text-sm text-gray-900">{{ report.density }} г/см³</span>
     </div>
-    <div class="detail-row" style="background:#f0f7ff; padding:.8rem; border-radius:6px; margin-top:.5rem">
-      <span class="label">Чистая нефть:</span>
-      <strong style="font-size:1.2rem; color:#4f46e5">{{ report.oil_volume }} т</strong>
+    <div class="flex items-center px-6 py-4 bg-indigo-50">
+      <span class="text-sm font-semibold text-gray-500 w-48">Чистая нефть</span>
+      <span class="text-xl font-bold text-indigo-700">{{ report.oil_volume }} т</span>
     </div>
   </div>
 
-  <div class="form-actions" style="margin-top:1rem">
-    <a href="/productions/delete/{{ report.id }}"
-       class="btn btn-danger"
-       onclick="return confirm('Удалить рапорт?')">Удалить</a>
+  <div class="flex gap-3">
+    <a href="/productions/delete/{{ report.id }}" onclick="return confirm('Удалить рапорт?')" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Удалить</a>
   </div>
+</div>
 {% endblock %}

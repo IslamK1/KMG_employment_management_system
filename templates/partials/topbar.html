@@ -1,0 +1,9 @@
+<header class="bg-white border-b border-gray-200 px-8 py-3.5 flex items-center justify-between flex-shrink-0">
+  <button class="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer" onclick="history.back()">Назад</button>
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">
+      {{ user[0]|upper if user else "?" }}
+    </div>
+    <span class="text-sm font-medium text-gray-700">{{ user }}</span>
+  </div>
+</header>

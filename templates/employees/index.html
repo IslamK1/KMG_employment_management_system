@@ -3,46 +3,76 @@
 {% block title %}Сотрудники{% endblock %}
 
 {% block content %}
-  <div class="page-header">
-    <h1>Сотрудники</h1>
-    <a href="/employees/create" class="btn btn-primary">Добавить</a>
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Сотрудники</h1>
+    <p class="text-sm text-gray-500 mt-1">Всего: {{ total }}</p>
   </div>
+  <a href="/employees/create"
+     class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold
+            px-5 py-2.5 rounded-lg transition-colors">
+    Добавить
+  </a>
+</div>
 
-  {% if employees %}
-  <table class="table">
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+  <table class="w-full text-sm">
     <thead>
-      <tr>
-        <th>№</th>
-        <th>Имя</th>
-        <th>Email</th>
-        <th>Должность</th>
-        <th>Компания</th>
-        <th>Действия</th>
+      <tr class="bg-gray-900 text-white">
+        <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">№</th>
+        <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Имя</th>
+        <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Email</th>
+        <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Должность</th>
+        <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Компания</th>
+        <th class="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Действия</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody class="divide-y divide-gray-100">
       {% for emp in employees %}
-      <tr>
-        <td>{{ emp.id }}</td>
-        <td>{{ emp.name }}</td>
-        <td>{{ emp.email }}</td>
-        <td>{{ emp.position or "—" }}</td>
-        <td>{{ emp.oil_company.name if emp.oil_company else "—" }}</td>
-        <td class="actions">
-          <a href="/employees/{{ emp.id }}" class="btn btn-sm">Просмотр</a>
-          <a href="/employees/edit/{{ emp.id }}" class="btn btn-warning btn-sm">Изменить</a>
-          <a href="/employees/delete/{{ emp.id }}"
-             class="btn btn-danger btn-sm"
-             onclick="return confirm('Удалить сотрудника?')">Удалить</a>
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-3 text-gray-400 text-xs font-mono">{{ emp.id }}</td>
+        <td class="px-5 py-3 font-medium text-gray-900">{{ emp.name }}</td>
+        <td class="px-5 py-3 text-gray-600">{{ emp.email }}</td>
+        <td class="px-5 py-3">
+          <span class="bg-indigo-50 text-indigo-700 text-xs font-medium px-2.5 py-1 rounded-full">
+            {{ emp.position or "—" }}
+          </span>
+        </td>
+        <td class="px-5 py-3 text-gray-600 text-sm">{{ emp.oil_company.name if emp.oil_company else "—" }}</td>
+        <td class="px-5 py-3">
+          <div class="flex items-center gap-2">
+            <a href="/employees/{{ emp.id }}"
+               class="text-xs font-semibold text-gray-600 hover:text-indigo-600
+                      px-3 py-1.5 bg-gray-100 hover:bg-indigo-50 rounded-lg transition-colors">
+              Просмотр
+            </a>
+            <a href="/employees/edit/{{ emp.id }}"
+               class="text-xs font-semibold text-amber-600 hover:text-amber-700
+                      px-3 py-1.5 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors">
+              Изменить
+            </a>
+            <a href="/employees/delete/{{ emp.id }}"
+               onclick="return confirm('Удалить сотрудника?')"
+               class="text-xs font-semibold text-red-600 hover:text-red-700
+                      px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+              Удалить
+            </a>
+          </div>
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
-  {% include "partials/pagination.html" %}
-  {% else %}
-    <div class="empty-state">
-      Сотрудников пока нет. <a href="/employees/create">Добавить первого</a>
-    </div>
+
+  {% if not employees %}
+  <div class="text-center py-16 text-gray-400">
+    <p class="text-lg">Сотрудников пока нет</p>
+    <a href="/employees/create" class="text-indigo-600 hover:underline text-sm mt-2 inline-block">
+      Добавить первого
+    </a>
+  </div>
   {% endif %}
+</div>
+
+{% include "partials/pagination.html" %}
 {% endblock %}
