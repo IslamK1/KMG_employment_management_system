@@ -17,3 +17,12 @@ format:
 format-check:
 	ruff format . --check
 	ruff check .
+
+css:
+	npm run css:build
+
+css-watch:
+	npm run css:watch
+
+js:
+	cp node_modules/chart.js/dist/chart.umd.js static/js/chart.umd.js

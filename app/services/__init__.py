@@ -4,6 +4,14 @@
 """
 
 from app.services.auth_service import authenticate_employee as authenticate_employee
+
+from app.services.dashboard_service import (
+    get_oil_dynamics as get_oil_dynamics,
+    get_top_companies as get_top_companies,
+    get_water_cut_by_company as get_water_cut_by_company,
+    get_well_types_distribution as get_well_types_distribution,
+)
+
 from app.services.daily_production_service import (
     check_duplicate as check_duplicate,
     create_report as create_report,
@@ -13,6 +21,7 @@ from app.services.daily_production_service import (
     get_report_by_id as get_report_by_id,
     get_reports_paginated as get_reports_paginated,
 )
+
 from app.services.employee_service import (
     create_employee as create_employee,
     delete_employee as delete_employee,
@@ -22,6 +31,8 @@ from app.services.employee_service import (
     get_employees_paginated as get_employees_paginated,
     update_employee as update_employee,
 )
+
+from app.services.dashboard_service import get_kpis as get_kpis
 
 __all__ = [
     "authenticate_employee",

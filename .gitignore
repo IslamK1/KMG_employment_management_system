@@ -9,3 +9,5 @@ test.db
 .vscode/
 *.egg-info/
 dist/
+node_modules/
+static/src/

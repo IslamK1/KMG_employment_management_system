@@ -24,7 +24,7 @@ class DailyProductionCreate(BaseModel):
 
     well_id: int
     date: date
-    working_hours: float = Field(..., ge=0, le=24, description="Время работы 0-24 часа")
+    working_hours: float = Field(..., ge=0, lt=24, description="Время работы 0-24 часа")
     liquid_volume: float = Field(..., gt=0, description="Объём жидкости в тоннах")
     water_cut: float = Field(..., ge=0, le=100, description="Обводненность 0-100%")
     density: float = Field(default=0.86, ge=0.7, le=1.0, description="Плотность нефти")

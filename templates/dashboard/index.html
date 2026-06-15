@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд{% endblock %}
+
+{% block content %}
+<!-- Шапка с фильтром -->
+<div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Дашборд</h1>
+    <p class="text-sm text-gray-500 mt-1">Мониторинг показателей добычи в разрезе компаний и скважин</p>
+  </div>
+
+  <div class="flex items-end gap-2 bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3">
+    <div class="flex flex-col">
+      <label class="text-xs font-semibold text-gray-500 mb-1">Дата с</label>
+      <input type="date" id="dateFrom"
+             class="h-9 px-3 rounded-lg border border-gray-300 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+    </div>
+    <div class="flex flex-col">
+      <label class="text-xs font-semibold text-gray-500 mb-1">Дата по</label>
+      <input type="date" id="dateTo"
+             class="h-9 px-3 rounded-lg border border-gray-300 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+    </div>
+    <button id="applyFilter"
+            class="h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 rounded-lg transition-colors">
+      Применить
+    </button>
+    <button id="resetFilter"
+            class="h-9 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold px-4 rounded-lg transition-colors">
+      Сбросить
+    </button>
+  </div>
+</div>
+
+<!-- KPI карточки -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Всего нефти</span>
+      <span class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm font-bold">Н</span>
+    </div>
+    <p id="kpiOil" class="text-2xl font-bold text-gray-900">—</p>
+    <p class="text-xs text-gray-400 mt-1">тонн за период</p>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Обводненность</span>
+      <span class="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center text-sky-600 text-sm font-bold">В</span>
+    </div>
+    <p id="kpiWater" class="text-2xl font-bold text-gray-900">—</p>
+    <p class="text-xs text-gray-400 mt-1">средняя, %</p>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Скважин</span>
+      <span class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 text-sm font-bold">С</span>
+    </div>
+    <p id="kpiWells" class="text-2xl font-bold text-gray-900">—</p>
+    <p class="text-xs text-gray-400 mt-1">активных за период</p>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Компаний</span>
+      <span class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 text-sm font-bold">К</span>
+    </div>
+    <p id="kpiCompanies" class="text-2xl font-bold text-gray-900">—</p>
+    <p class="text-xs text-gray-400 mt-1">всего в системе</p>
+  </div>
+</div>
+
+<!-- Сетка графиков 2×2 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+      <h2 class="text-sm font-semibold text-gray-700">Динамика добычи чистой нефти (т)</h2>
+    </div>
+    <div class="h-64"><canvas id="oilDynamics"></canvas></div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+      <h2 id="waterCutTitle" class="text-sm font-semibold text-gray-700">Обводненность скважин (%)</h2>
+    </div>
+    <div class="h-64"><canvas id="waterCut"></canvas></div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+      <h2 class="text-sm font-semibold text-gray-700">Распределение фонда скважин</h2>
+    </div>
+    <div class="h-64"><canvas id="wellTypes"></canvas></div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+      <h2 class="text-sm font-semibold text-gray-700">Топ компаний по добыче (т)</h2>
+    </div>
+    <div class="h-64"><canvas id="topCompanies"></canvas></div>
+  </div>
+
+</div>
+
+<script src="/static/js/chart.umd.js"></script>
+<script>
+async function loadJSON(url) {
+  const res = await fetch(url);
+  return res.json();
+}
+
+function buildQuery() {
+  const from = document.getElementById('dateFrom').value;
+  const to = document.getElementById('dateTo').value;
+  const params = new URLSearchParams();
+  if (from) params.append('date_from', from);
+  if (to) params.append('date_to', to);
+  const qs = params.toString();
+  return qs ? '?' + qs : '';
+}
+
+const charts = {};
+function renderChart(key, canvasId, config) {
+  if (charts[key]) charts[key].destroy();
+  charts[key] = new Chart(document.getElementById(canvasId), config);
+}
+
+// Единый стиль осей для всех графиков
+const axisStyle = {
+  x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+  y: { grid: { color: '#f1f5f9' }, ticks: { color: '#94a3b8', font: { size: 11 } } }
+};
+const tooltipStyle = {
+  backgroundColor: '#1e293b', padding: 10, cornerRadius: 8, titleFont: { size: 12 }, bodyFont: { size: 12 }
+};
+
+async function loadDashboard() {
+  const q = buildQuery();
+
+  // KPI карточки
+  const kpi = await loadJSON('/dashboard/api/kpis' + q);
+  document.getElementById('kpiOil').textContent = kpi.total_oil.toLocaleString('ru-RU');
+  document.getElementById('kpiWater').textContent = kpi.avg_water_cut + '%';
+  document.getElementById('kpiWells').textContent = kpi.wells_count;
+  document.getElementById('kpiCompanies').textContent = kpi.companies_count;
+
+  // 1. Динамика — линейный
+  const oil = await loadJSON('/dashboard/api/oil-dynamics' + q);
+  renderChart('oil', 'oilDynamics', {
+    type: 'line',
+    data: { labels: oil.labels, datasets: [{
+      data: oil.values, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)',
+      fill: true, tension: 0.35, pointRadius: 2, borderWidth: 2,
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: tooltipStyle },
+      scales: axisStyle
+    }
+  });
+
+  // 2. Обводненность — столбчатый
+  const water = await loadJSON('/dashboard/api/water-cut' + q);
+  document.getElementById('waterCutTitle').textContent = 'Обводненность скважин: ' + water.company + ' (%)';
+  renderChart('water', 'waterCut', {
+    type: 'bar',
+    data: { labels: water.labels, datasets: [{ data: water.values, backgroundColor: '#0ea5e9', borderRadius: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: tooltipStyle },
+      scales: axisStyle
+    }
+  });
+
+  // 3. Фонд скважин — кольцевой
+  const types = await loadJSON('/dashboard/api/well-types' + q);
+  renderChart('types', 'wellTypes', {
+    type: 'doughnut',
+    data: { labels: types.labels, datasets: [{
+      data: types.values, backgroundColor: ['#6366f1','#0ea5e9','#f59e0b','#ef4444','#10b981','#8b5cf6'], borderWidth: 0
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: { legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 }, color: '#64748b' } }, tooltip: tooltipStyle }
+    }
+  });
+
+  // 4. Топ компаний — горизонтальный
+  const top = await loadJSON('/dashboard/api/top-companies' + q);
+  renderChart('top', 'topCompanies', {
+    type: 'bar',
+    data: { labels: top.labels, datasets: [{ data: top.values, backgroundColor: '#10b981', borderRadius: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false }, tooltip: tooltipStyle },
+      scales: axisStyle
+    }
+  });
+}
+
+document.getElementById('applyFilter').addEventListener('click', loadDashboard);
+document.getElementById('resetFilter').addEventListener('click', () => {
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value = '';
+  loadDashboard();
+});
+
+loadDashboard();
+</script>
+{% endblock %}

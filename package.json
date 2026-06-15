@@ -1,0 +1,34 @@
+{
+  "name": "employee-management-system",
+  "version": "1.0.0",
+  "description": "Веб-приложение для управления сотрудниками нефтяных компаний.",
+  "main": "index.js",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.3.0",
+    "chart.js": "^4.5.1",
+    "detect-libc": "^2.1.2",
+    "enhanced-resolve": "^5.23.0",
+    "graceful-fs": "^4.2.11",
+    "is-extglob": "^2.1.1",
+    "is-glob": "^4.0.3",
+    "jiti": "^2.7.0",
+    "lightningcss": "^1.32.0",
+    "lightningcss-win32-x64-msvc": "^1.32.0",
+    "magic-string": "^0.30.21",
+    "mri": "^1.2.0",
+    "node-addon-api": "^7.1.1",
+    "picocolors": "^1.1.1",
+    "picomatch": "^4.0.4",
+    "source-map-js": "^1.2.1",
+    "tailwindcss": "^4.3.0",
+    "tapable": "^2.3.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "css:build": "npx @tailwindcss/cli -i ./static/src/input.css -o ./static/style.css",
+    "css:watch": "npx @tailwindcss/cli -i ./static/src/input.css -o ./static/style.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
