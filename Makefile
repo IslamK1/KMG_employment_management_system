@@ -26,3 +26,5 @@ css-watch:
 
 js:
 	cp node_modules/chart.js/dist/chart.umd.js static/js/chart.umd.js
+test:
+	pytest -v 

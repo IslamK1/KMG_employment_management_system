@@ -25,8 +25,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "css:build": "npx @tailwindcss/cli -i ./static/src/input.css -o ./static/style.css",
-    "css:watch": "npx @tailwindcss/cli -i ./static/src/input.css -o ./static/style.css --watch"
+    "css:build": "npx @tailwindcss/cli -i ./static/css/input.css -o ./static/style.css",
+    "css:watch": "npx @tailwindcss/cli -i ./static/css/input.css -o ./static/style.css --watch"
   },
   "keywords": [],
   "author": "",
