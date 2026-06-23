@@ -16,7 +16,7 @@ from app.schemas import DailyProductionCreate
 from app.services import check_duplicate, create_report
 
 
-#Уровень схемы
+# Уровень схемы
 class TestSchemaValidation:
     """Валидация на уровне Pydantic-схемы (до попадания в БД)."""
 
@@ -77,8 +77,7 @@ class TestSchemaValidation:
             )
 
 
-
-#Уровень сервисa
+# Уровень сервисa
 class TestCreateReportService:
     """Бизнес-логика create_report и защита от дублей."""
 
@@ -117,9 +116,7 @@ class TestCreateReportService:
         assert check_duplicate(db_session, sample_well.id, date(2026, 6, 16)) is False
 
 
-# ─────────────────────────── Уровень HTTP ───────────────────────────
-
-
+# Уровень HTTP
 class TestHTTPEndpoints:
     """POST /productions/create — поведение как у реального пользователя."""
 

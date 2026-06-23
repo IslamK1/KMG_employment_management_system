@@ -12,7 +12,7 @@ from app.models import DailyProduction, Well
 from app.schemas import DailyProductionCreate
 
 
-def get_all_reports(db: Session) -> list[DailyProduction]:
+def get_all_reports(db: Session) -> list[type[DailyProduction]]:
     """
     Возвращает все суточные рапорты отсортированные по дате.
 
@@ -25,7 +25,7 @@ def get_all_reports(db: Session) -> list[DailyProduction]:
     return db.query(DailyProduction).order_by(DailyProduction.date.desc()).all()
 
 
-def get_report_by_id(db: Session, report_id: int) -> DailyProduction | None:
+def get_report_by_id(db: Session, report_id: int) -> type[DailyProduction] | None:
     """
     Возвращает рапорт по ID.
 
@@ -117,7 +117,7 @@ def delete_report(db: Session, report_id: int) -> bool:
     return True
 
 
-def get_all_wells(db: Session) -> list[Well]:
+def get_all_wells(db: Session) -> list[type[Well]]:
     """
     Возвращает список всех скважин для формы выбора.
 
@@ -132,7 +132,7 @@ def get_all_wells(db: Session) -> list[Well]:
 
 def get_reports_paginated(
     db: Session, page: int = 1, per_page: int = 10
-) -> tuple[list[DailyProduction], int]:
+) -> tuple[list[type[DailyProduction]], int]:
     """
     Возвращает рапорты с пагинацией.
 

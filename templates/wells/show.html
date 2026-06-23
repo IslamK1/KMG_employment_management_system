@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ well.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">{{ well.name }}</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        <span class="bg-sky-50 text-sky-700 text-xs font-medium px-2.5 py-1 rounded-full">{{ well.type }}</span>
+      </p>
+    </div>
+    <div class="flex gap-3">
+      <a href="/wells/edit/{{ well.id }}" class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Редактировать</a>
+      <a href="/wells/delete/{{ well.id }}" onclick="return confirm('Удалить скважину?')" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Удалить</a>
+    </div>
+  </div>
+
+  <!-- Характеристики скважины -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 divide-y divide-gray-100">
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Тип</span>
+      <span class="text-sm text-gray-900">{{ well.type }}</span>
+    </div>
+    <div class="flex px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Максимальная глубина</span>
+      <span class="text-sm text-gray-900">{{ well.max_drilling_depth }} м</span>
+    </div>
+    <div class="flex items-center px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-48">Компания</span>
+      {% if well.oil_company %}
+      <a href="/companies/{{ well.oil_company.id }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-700">{{ well.oil_company.name }}</a>
+      {% else %}
+      <span class="text-sm text-gray-900">—</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Суточные рапорты скважины -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h2 class="text-sm font-semibold text-gray-700">Суточные рапорты ({{ well.daily_productions|length }})</h2>
+      <a href="/productions/create" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">+ Добавить рапорт</a>
+    </div>
+    {% if well.daily_productions %}
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-200">
+          <th class="text-left px-6 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider">Дата</th>
+          <th class="text-left px-6 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider">Часы</th>
+          <th class="text-left px-6 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider">Жидкость</th>
+          <th class="text-left px-6 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider">Вода</th>
+          <th class="text-left px-6 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider">Нефть (т)</th>
+          <th class="text-left px-6 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for report in well.daily_productions %}
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-6 py-3 text-gray-600">{{ report.date }}</td>
+          <td class="px-6 py-3 text-gray-600">{{ report.working_hours }}</td>
+          <td class="px-6 py-3 text-gray-600">{{ report.liquid_volume }}</td>
+          <td class="px-6 py-3 text-gray-600">{{ report.water_cut }}%</td>
+          <td class="px-6 py-3 font-bold text-indigo-700">{{ report.oil_volume }}</td>
+          <td class="px-6 py-3 text-right">
+            <a href="/productions/{{ report.id }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">Открыть →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="px-6 py-8 text-center text-gray-400 text-sm">У скважины пока нет рапортов</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

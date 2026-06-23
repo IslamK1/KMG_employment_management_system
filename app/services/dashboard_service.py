@@ -104,12 +104,15 @@ def get_well_types_distribution(
     Returns:
         dict: {"labels": [типы], "values": [количество]}
     """
-    query = (
-        db.query(Well.type, func.count(func.distinct(Well.id)))
-        .join(DailyProduction, DailyProduction.well_id == Well.id)
+    query = db.query(Well.type, func.count(func.distinct(Well.id))).join(
+        DailyProduction, DailyProduction.well_id == Well.id
     )
     query = _apply_date_filter(query, date_from, date_to)
-    rows = query.group_by(Well.type).order_by(func.count(func.distinct(Well.id)).desc()).all()
+    rows = (
+        query.group_by(Well.type)
+        .order_by(func.count(func.distinct(Well.id)).desc())
+        .all()
+    )
 
     return {
         "labels": [r[0] for r in rows],

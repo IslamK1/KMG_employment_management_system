@@ -34,6 +34,28 @@ from app.services.employee_service import (
 
 from app.services.dashboard_service import get_kpis as get_kpis
 
+from app.services.company_service import (
+    create_company as create_company,
+    delete_company as delete_company,
+    get_companies_paginated as get_companies_paginated,
+    get_company_by_id as get_company_by_id,
+    update_company as update_company,
+)
+
+from app.services.excel_service import (
+    build_import_template as build_import_template,
+    export_monthly_summary as export_monthly_summary,
+    import_productions as import_productions,
+)
+
+from app.services.well_service import (
+    create_well as create_well,
+    delete_well as delete_well,
+    get_well_by_id as get_well_by_id,
+    get_wells_paginated as get_wells_paginated,
+    update_well as update_well,
+)
+
 __all__ = [
     "authenticate_employee",
     "get_all_employees",

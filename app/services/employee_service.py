@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.models import Employee, OilCompany
 
 
-def get_all_employees(db: Session) -> list[Employee]:
+def get_all_employees(db: Session) -> list[type[Employee]]:
     """
     Возвращает список всех сотрудников из БД.
 
@@ -22,7 +22,7 @@ def get_all_employees(db: Session) -> list[Employee]:
     return db.query(Employee).all()
 
 
-def get_employee_by_id(db: Session, emp_id: int) -> Employee | None:
+def get_employee_by_id(db: Session, emp_id: int) -> type[Employee] | None:
     """
     Возвращает сотрудника по ID.
 
@@ -36,7 +36,7 @@ def get_employee_by_id(db: Session, emp_id: int) -> Employee | None:
     return db.query(Employee).filter(Employee.id == emp_id).first()
 
 
-def get_employee_by_email(db: Session, email: str) -> Employee | None:
+def get_employee_by_email(db: Session, email: str) -> type[Employee] | None:
     """
     Возвращает сотрудника по email.
 
@@ -50,7 +50,7 @@ def get_employee_by_email(db: Session, email: str) -> Employee | None:
     return db.query(Employee).filter(Employee.email == email).first()
 
 
-def get_all_companies(db: Session) -> list[OilCompany]:
+def get_all_companies(db: Session) -> list[type[OilCompany]]:
     """
     Возвращает список всех нефтяных компаний.
 
@@ -161,7 +161,7 @@ def delete_employee(db: Session, emp_id: int) -> bool:
 
 def get_employees_paginated(
     db: Session, page: int = 1, per_page: int = 10
-) -> tuple[list[Employee], int]:
+) -> tuple[list[type[Employee]], int]:
     """
     Возвращает сотрудников с пагинацией.
 
@@ -174,10 +174,5 @@ def get_employees_paginated(
         tuple: (список сотрудников, общее количество).
     """
     total = db.query(Employee).count()
-    employees = (
-        db.query(Employee)
-        .offset((page - 1) * per_page)
-        .limit(per_page)
-        .all()
-    )
+    employees = db.query(Employee).offset((page - 1) * per_page).limit(per_page).all()
     return employees, total

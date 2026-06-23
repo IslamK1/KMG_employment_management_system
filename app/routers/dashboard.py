@@ -15,11 +15,11 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import require_auth
 from app.services import (
+    get_kpis,
     get_oil_dynamics,
     get_top_companies,
     get_water_cut_by_company,
     get_well_types_distribution,
-    get_kpis, 
 )
 
 router = APIRouter(
@@ -77,6 +77,7 @@ def api_top_companies(
 ):
     """JSON: топ компаний по добыче."""
     return JSONResponse(get_top_companies(db, date_from, date_to))
+
 
 @router.get("/api/kpis")
 def api_kpis(

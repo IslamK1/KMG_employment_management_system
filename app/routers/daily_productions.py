@@ -4,7 +4,7 @@
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, Form, Request, Query
+from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -15,7 +15,6 @@ from app.schemas import DailyProductionCreate
 from app.services import (
     create_report,
     delete_report,
-    get_all_reports,
     get_all_wells,
     get_report_by_id,
     get_reports_paginated,

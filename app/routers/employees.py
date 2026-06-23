@@ -4,7 +4,7 @@
 Авторизация проверяется автоматически через Depends(require_auth).
 """
 
-from fastapi import APIRouter, Depends, Form, Request, Query
+from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -15,10 +15,9 @@ from app.services import (
     create_employee,
     delete_employee,
     get_all_companies,
-    get_all_employees,
     get_employee_by_id,
+    get_employees_paginated,
     update_employee,
-    get_employees_paginated, 
 )
 
 # Все маршруты защищены через require_auth автоматически
@@ -49,6 +48,7 @@ def index(
             "total_pages": total_pages,
         },
     )
+
 
 @router.get("/create", response_class=HTMLResponse)
 def create_form(request: Request, db: Session = Depends(get_db)):

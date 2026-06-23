@@ -93,14 +93,16 @@ bulk_records = []
 for well in target_wells:
     for day_offset in range(365):
         production_date = today - timedelta(days=day_offset)
-        bulk_records.append({
-            "well_id": well.id,
-            "date": production_date,
-            "working_hours": round(random.uniform(1.0, 24.0), 1),
-            "liquid_volume": round(random.uniform(50.0, 500.0), 2),
-            "water_cut": round(random.uniform(0.0, 80.0), 1),
-            "density": round(random.uniform(0.82, 0.92), 3),
-        })
+        bulk_records.append(
+            {
+                "well_id": well.id,
+                "date": production_date,
+                "working_hours": round(random.uniform(1.0, 24.0), 1),
+                "liquid_volume": round(random.uniform(50.0, 500.0), 2),
+                "water_cut": round(random.uniform(0.0, 80.0), 1),
+                "density": round(random.uniform(0.82, 0.92), 3),
+            }
+        )
 
 
 bulk_insert = pg_insert(DailyProduction).values(bulk_records).on_conflict_do_nothing()
