@@ -28,7 +28,7 @@ OIL_EXPR = (
 
 # Ожидаемые колонки файла импорта (порядок важен)
 IMPORT_COLUMNS = [
-    "well_id",
+    "well_name",
     "date",
     "working_hours",
     "liquid_volume",
@@ -42,7 +42,7 @@ def build_import_template(wells=None) -> bytes:
     Создаёт шаблон Excel для импорта с заголовками и примером строки.
 
     Если передан список скважин, добавляет второй лист «Скважины» —
-    справочник реальных ID, чтобы оператор знал что вписывать в well_id.
+    справочник названий, чтобы оператор знал что вписывать в колонку Скважина.
 
     Args:
         wells (list[Well] | None): Список скважин для справочного листа.
@@ -58,7 +58,7 @@ def build_import_template(wells=None) -> bytes:
     ws.title = "Рапорты"
 
     headers = [
-        "well_id",
+        "Скважина",
         "date (ГГГГ-ММ-ДД)",
         "working_hours (0-24)",
         "liquid_volume",
@@ -67,9 +67,9 @@ def build_import_template(wells=None) -> bytes:
     ]
     ws.append(headers)
 
-    # Пример строки с реальным ID первой скважины, если она есть
-    example_id = wells[0].id if wells else 1
-    ws.append([example_id, "2026-06-15", 23.5, 150.0, 25.0, 0.86])
+    # Пример строки с реальным названием первой скважины, если она есть
+    example_name = wells[0].name if wells else "Скважина-1"
+    ws.append([example_name, "2026-06-15", 23.5, 150.0, 25.0, 0.86])
 
     for cell in ws[1]:
         cell.fill = header_fill
@@ -82,15 +82,15 @@ def build_import_template(wells=None) -> bytes:
     # Справочный лист со скважинами и их ID
     if wells:
         ref = wb.create_sheet("Скважины")
-        ref.append(["ID", "Название", "Тип", "Компания"])
+        ref.append(["Название", "Тип", "Компания"])
         for w in wells:
             company = w.oil_company.name if w.oil_company else "—"
-            ref.append([w.id, w.name, w.type, company])
+            ref.append([w.name, w.type, company])
         for cell in ref[1]:
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = Alignment(horizontal="center")
-        widths = [8, 20, 16, 30]
+        widths = [20, 16, 30]
         for i, width in enumerate(widths, start=1):
             ref.column_dimensions[chr(64 + i)].width = width
 
@@ -135,15 +135,24 @@ def import_productions(db: Session, file_bytes: bytes) -> dict:
         if row is None or all(cell is None for cell in row):
             continue
 
+        # поиск скважины по названию (напр. "Скважина-13AI")
+        well_name = str(row[0]).strip() if row[0] is not None else ""
+        well = db.query(Well).filter(Well.name == well_name).first()
+        if not well:
+            errors.append(
+                f"Строка {row_index}: скважина '{well_name}' не найдена"
+            )
+            continue
+
         try:
-            well_id, raw_date, hours, liquid, water, density = row[:6]
+            _, raw_date, hours, liquid, water, density = row[:6]
 
             # плотность по умолчанию, если ячейка пустая
             if density is None:
                 density = 0.86
 
             data = DailyProductionCreate(
-                well_id=int(well_id),
+                well_id=well.id,
                 date=_parse_date(raw_date),
                 working_hours=float(hours),
                 liquid_volume=float(liquid),
@@ -152,12 +161,6 @@ def import_productions(db: Session, file_bytes: bytes) -> dict:
             )
         except Exception as e:
             errors.append(f"Строка {row_index}: ошибка данных ({e})")
-            continue
-
-        # проверка существования скважины
-        well = db.query(Well).filter(Well.id == data.well_id).first()
-        if not well:
-            errors.append(f"Строка {row_index}: скважина id={data.well_id} не найдена")
             continue
 
         # пропуск дубликатов

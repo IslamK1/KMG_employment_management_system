@@ -8,8 +8,89 @@
     <h1 class="text-2xl font-bold text-gray-900">Суточные рапорты</h1>
     <p class="text-sm text-gray-500 mt-1">Всего: {{ total }}</p>
   </div>
-  <a href="/productions/create" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Добавить рапорт</a>
+  <div class="flex items-center gap-3">
+    <button type="button" onclick="togglePanel('importPanel')"
+        class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Импорт</button>
+    <button type="button" onclick="togglePanel('exportPanel')"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Экспорт</button>
+    <a href="/productions/create" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Добавить рапорт</a>
+  </div>
 </div>
+
+<!-- Результат импорта -->
+{% if import_result %}
+  {% if import_result.error %}
+  <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-6 text-sm">
+    {{ import_result.error }}
+  </div>
+  {% else %}
+  <div class="bg-emerald-50 border border-emerald-200 rounded-lg px-5 py-4 mb-6">
+    <p class="font-semibold text-emerald-800 mb-2">Импорт завершён</p>
+    <div class="flex gap-6 text-sm text-emerald-800">
+      <span>Добавлено: <b>{{ import_result.created }}</b></span>
+      <span>Пропущено дубликатов: <b>{{ import_result.skipped }}</b></span>
+    </div>
+    {% if import_result.errors %}
+    <p class="mt-3 mb-1 text-sm font-semibold text-amber-700">Строки с ошибками ({{ import_result.errors|length }}):</p>
+    <ul class="space-y-0.5">
+      {% for err in import_result.errors %}
+      <li class="text-xs text-amber-700">{{ err }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endif %}
+
+<!-- Панель импорта -->
+<div id="importPanel" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+  <h2 class="text-base font-semibold text-gray-900">Импорт рапортов из Excel</h2>
+  <p class="text-sm text-gray-500 mt-1 mb-4">Загрузите .xlsx файл с рапортами. Скважина указывается по названию (напр. Скважина-13AI).</p>
+  <a href="/excel/template" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 mb-4">
+    <span class="text-base">&#8595;</span> Скачать шаблон для заполнения
+  </a>
+  <form method="post" action="/excel/import" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
+    <input type="file" name="file" accept=".xlsx" required
+           class="text-sm text-gray-600 cursor-pointer border border-gray-300 rounded-lg
+                  file:mr-4 file:py-2.5 file:px-4 file:border-0 file:text-sm file:font-semibold
+                  file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 file:cursor-pointer">
+    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Загрузить</button>
+  </form>
+</div>
+
+<!-- Панель экспорта -->
+<div id="exportPanel" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+  <h2 class="text-base font-semibold text-gray-900">Экспорт сводки по скважинам</h2>
+  <p class="text-sm text-gray-500 mt-1 mb-4">Сводный отчёт за выбранный месяц в .xlsx.</p>
+  <form method="get" action="/excel/export" class="flex flex-wrap items-end gap-3">
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1.5">Год</label>
+      <select name="year" class="h-11 w-28 px-3 rounded-lg border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        {% for y in range(current_year - 5, current_year + 1) %}
+        <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1.5">Месяц</label>
+      <select name="month" class="h-11 w-24 px-3 rounded-lg border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        {% for m in range(1, 13) %}
+        <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ "%02d"|format(m) }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="h-11 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-5 rounded-lg transition-colors">Скачать .xlsx</button>
+  </form>
+</div>
+
+<script>
+function togglePanel(id) {
+  const el = document.getElementById(id);
+  const other = id === 'importPanel' ? 'exportPanel' : 'importPanel';
+  document.getElementById(other).classList.add('hidden');
+  el.classList.toggle('hidden');
+}
+</script>
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
   <table class="w-full text-sm">

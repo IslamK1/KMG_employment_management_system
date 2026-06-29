@@ -38,6 +38,10 @@ def index(
     reports, total = get_reports_paginated(db, page, per_page)
     total_pages = (total + per_page - 1) // per_page
 
+    # результат импорта Excel (если был) — забираем из сессии один раз
+    import_result = request.session.pop("import_result", None)
+    today = date.today()
+
     return templates.TemplateResponse(
         request=request,
         name="productions/index.html",
@@ -48,6 +52,9 @@ def index(
             "per_page": per_page,
             "total": total,
             "total_pages": total_pages,
+            "import_result": import_result,
+            "current_year": today.year,
+            "current_month": today.month,
         },
     )
 
