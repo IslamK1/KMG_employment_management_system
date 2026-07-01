@@ -17,7 +17,6 @@ from sqlalchemy.orm import Session
 
 from app.models import DailyProduction, OilCompany, Well
 from app.schemas import DailyProductionCreate
-from app.services.daily_production_service import check_duplicate
 
 # Формула чистой нефти на уровне SQL (как в дашборде)
 OIL_EXPR = (
@@ -120,13 +119,13 @@ def import_productions(db: Session, file_bytes: bytes) -> dict:
         file_bytes (bytes): Содержимое загруженного .xlsx файла.
 
     Returns:
-        dict: {"created": int, "skipped": int, "errors": [строки с ошибками]}
+        dict: {"created": int, "updated": int, "errors": [строки с ошибками]}
     """
     wb = load_workbook(BytesIO(file_bytes), data_only=True)
     ws = wb.active
 
     created = 0
-    skipped = 0
+    updated = 0
     errors = []
 
     # row_index начинается с 2 (1-я строка — заголовки)
@@ -163,24 +162,37 @@ def import_productions(db: Session, file_bytes: bytes) -> dict:
             errors.append(f"Строка {row_index}: ошибка данных ({e})")
             continue
 
-        # пропуск дубликатов
-        if check_duplicate(db, data.well_id, data.date):
-            skipped += 1
-            continue
-
-        report = DailyProduction(
-            well_id=data.well_id,
-            date=data.date,
-            working_hours=data.working_hours,
-            liquid_volume=data.liquid_volume,
-            water_cut=data.water_cut,
-            density=data.density,
+        # upsert: если рапорт за эту скважину+дату уже есть — обновляем,
+        # иначе создаём новый
+        existing = (
+            db.query(DailyProduction)
+            .filter(
+                DailyProduction.well_id == data.well_id,
+                DailyProduction.date == data.date,
+            )
+            .first()
         )
-        db.add(report)
-        created += 1
+
+        if existing:
+            existing.working_hours = data.working_hours
+            existing.liquid_volume = data.liquid_volume
+            existing.water_cut = data.water_cut
+            existing.density = data.density
+            updated += 1
+        else:
+            report = DailyProduction(
+                well_id=data.well_id,
+                date=data.date,
+                working_hours=data.working_hours,
+                liquid_volume=data.liquid_volume,
+                water_cut=data.water_cut,
+                density=data.density,
+            )
+            db.add(report)
+            created += 1
 
     db.commit()
-    return {"created": created, "skipped": skipped, "errors": errors}
+    return {"created": created, "updated": updated, "errors": errors}
 
 
 def export_monthly_summary(db: Session, year: int, month: int) -> bytes:
@@ -266,6 +278,82 @@ def export_monthly_summary(db: Session, year: int, month: int) -> bytes:
     widths = [18, 28, 16, 16, 20, 26, 16]
     for i, width in enumerate(widths, start=1):
         ws.column_dimensions[chr(64 + i)].width = width
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    return buffer.getvalue()
+
+
+def export_detailed_reports(db: Session, year: int, month: int) -> bytes:
+    """
+    Детальная выгрузка рапортов за месяц — каждый рапорт отдельной строкой.
+
+    Колонки совпадают с шаблоном импорта (Скважина, date, working_hours,
+    liquid_volume, water_cut, density), поэтому выгруженный файл можно
+    отредактировать и загрузить обратно через импорт (режим upsert).
+
+    Args:
+        db (Session): Сессия базы данных.
+        year (int): Год.
+        month (int): Месяц (1-12).
+
+    Returns:
+        bytes: Содержимое .xlsx файла.
+    """
+    start = date(year, month, 1)
+    end = date(year, month, calendar.monthrange(year, month)[1])
+
+    rows = (
+        db.query(
+            Well.name,
+            DailyProduction.date,
+            DailyProduction.working_hours,
+            DailyProduction.liquid_volume,
+            DailyProduction.water_cut,
+            DailyProduction.density,
+        )
+        .join(Well, Well.id == DailyProduction.well_id)
+        .filter(DailyProduction.date >= start, DailyProduction.date <= end)
+        .order_by(DailyProduction.date.desc(), DailyProduction.id.desc())
+        .all()
+    )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Рапорты"
+
+    # ровно те же заголовки, что у шаблона импорта
+    headers = [
+        "Скважина",
+        "date (ГГГГ-ММ-ДД)",
+        "working_hours (0-24)",
+        "liquid_volume",
+        "water_cut (0-100)",
+        "density (0.7-1.0)",
+    ]
+    ws.append(headers)
+
+    header_fill = PatternFill("solid", fgColor="1A1A2E")
+    header_font = Font(color="FFFFFF", bold=True)
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+
+    for r in rows:
+        ws.append(
+            [
+                r[0],
+                r[1].isoformat(),
+                r[2],
+                r[3],
+                r[4],
+                r[5],
+            ]
+        )
+
+    for col in ws.columns:
+        ws.column_dimensions[col[0].column_letter].width = 22
 
     buffer = BytesIO()
     wb.save(buffer)

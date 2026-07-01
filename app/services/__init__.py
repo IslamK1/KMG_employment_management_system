@@ -44,6 +44,7 @@ from app.services.company_service import (
 
 from app.services.excel_service import (
     build_import_template as build_import_template,
+    export_detailed_reports as export_detailed_reports,
     export_monthly_summary as export_monthly_summary,
     import_productions as import_productions,
 )

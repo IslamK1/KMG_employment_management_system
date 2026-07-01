@@ -1,9 +1,9 @@
 """
 Маршруты импорта и экспорта Excel.
 
-Скачивание шаблона, массовый импорт рапортов и выгрузка сводного отчёта.
-Формы импорта/экспорта живут на странице суточных рапортов; результат
-импорта передаётся обратно через сессию (flash) и редирект.
+Скачивание шаблона, массовый импорт рапортов (создание/обновление) и
+выгрузка отчётов (сводка или детальный список). Результат импорта
+передаётся обратно через сессию (flash) и редирект на страницу рапортов.
 """
 
 from io import BytesIO
@@ -16,6 +16,7 @@ from app.database import get_db
 from app.dependencies import require_auth
 from app.services import (
     build_import_template,
+    export_detailed_reports,
     export_monthly_summary,
     get_all_wells,
     import_productions,
@@ -69,7 +70,17 @@ def export_file(
     db: Session = Depends(get_db),
     year: int = Query(...),
     month: int = Query(..., ge=1, le=12),
+    kind: str = Query("summary"),
 ):
-    """Выгрузка сводного отчёта по скважинам за месяц."""
+    """
+    Выгрузка отчёта по скважинам за месяц.
+
+    kind="summary"  — сводка (итоги по скважинам).
+    kind="detailed" — детальный список рапортов (можно залить обратно).
+    """
+    if kind == "detailed":
+        content = export_detailed_reports(db, year, month)
+        return _xlsx_response(content, f"reports_{year}_{month:02d}.xlsx")
+
     content = export_monthly_summary(db, year, month)
     return _xlsx_response(content, f"summary_{year}_{month:02d}.xlsx")
