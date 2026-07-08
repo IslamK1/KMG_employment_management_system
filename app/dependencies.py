@@ -1,39 +1,87 @@
 """
-Модуль зависимостей для проверки авторизации.
-Содержит вспомогательные функции для защиты маршрутов.
+Модуль зависимостей для проверки авторизации и ролей.
+
+Ролевая модель (аналог Laravel Gates/Policies):
+  - admin    — полный доступ, создаёт компании и назначает менеджеров
+  - manager  — дашборд и скважины своей компании
+  - operator — только рапорты по скважинам своей компании
+
+Роль и компания пользователя хранятся в сессии при входе.
+
+Важно: чтобы зависимость реально прерывала запрос и делала редирект,
+она должна ВЫБРАСЫВАТЬ исключение. Если просто вернуть RedirectResponse,
+FastAPI проигнорирует его (значение уйдёт как результат зависимости).
+Поэтому используем HTTPException со статусом 302 и заголовком Location —
+браузер увидит редирект.
 """
 
-from fastapi import Request
-from fastapi.responses import RedirectResponse
+from fastapi import HTTPException, Request, status
 
 
-def get_current_user(request: Request):
+def _redirect(url: str) -> HTTPException:
+    """Создаёт исключение-редирект (302 + заголовок Location)."""
+    return HTTPException(
+        status_code=status.HTTP_302_FOUND,
+        detail="redirect",
+        headers={"Location": url},
+    )
+
+
+def get_current_user(request: Request) -> dict | None:
     """
-    Возвращает email текущего залогиненного пользователя.
-
-    Args:
-        request (Request): Объект текущего HTTP запроса.
+    Возвращает данные текущего пользователя из сессии.
 
     Returns:
-        str | None: Email пользователя если залогинен, иначе None.
+        dict | None: {email, name, role, company_id} или None если не залогинен.
     """
-    return request.session.get("user")
+    email = request.session.get("user")
+    if not email:
+        return None
+    return {
+        "email": email,
+        "name": request.session.get("user_name"),
+        "role": request.session.get("user_role"),
+        "company_id": request.session.get("user_company_id"),
+    }
 
 
 def require_auth(request: Request):
     """
-    Проверяет авторизацию пользователя.
-
-    Если пользователь не залогинен — возвращает редирект на /login.
-    Используется как FastAPI dependency через Depends().
-
-    Args:
-        request (Request): Объект текущего HTTP запроса.
+    Проверяет что пользователь залогинен, иначе редиректит на /login.
 
     Returns:
-        RedirectResponse | str: Редирект на /login или email пользователя.
+        str: Email пользователя (если залогинен).
+
+    Raises:
+        HTTPException: 302 на /login, если не залогинен.
     """
     user = request.session.get("user")
     if not user:
-        return RedirectResponse(url="/login", status_code=302)
+        raise _redirect("/login")
     return user
+
+
+def require_role(*allowed_roles: str):
+    """
+    Фабрика зависимостей: пускает только пользователей с нужной ролью.
+
+    Использование в роуте:
+        dependencies=[Depends(require_role("admin", "manager"))]
+
+    Args:
+        *allowed_roles: Роли, которым разрешён доступ.
+
+    Returns:
+        Функция-зависимость для Depends().
+    """
+
+    def checker(request: Request):
+        if not request.session.get("user"):
+            raise _redirect("/login")
+        role = request.session.get("user_role")
+        if role not in allowed_roles:
+            # нет прав — на страницу рапортов (доступна всем ролям)
+            raise _redirect("/productions/")
+        return role
+
+    return checker

@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import require_auth
+from app.dependencies import require_auth, require_role
 from app.services import (
     create_company,
     delete_company,
@@ -19,7 +19,7 @@ from app.services import (
     update_company,
 )
 
-router = APIRouter(prefix="/companies", dependencies=[Depends(require_auth)])
+router = APIRouter(prefix="/companies", dependencies=[Depends(require_auth), Depends(require_role("admin"))])
 templates = Jinja2Templates(directory="templates")
 
 

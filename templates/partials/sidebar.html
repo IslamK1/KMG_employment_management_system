@@ -1,4 +1,5 @@
 {% set path = request.url.path %}
+{% set role = request.session.get('user_role') %}
 <aside class="w-64 min-h-screen bg-slate-900 text-white flex flex-col flex-shrink-0">
   <div class="px-6 py-5 border-b border-white/10">
     <h1 class="text-lg font-bold tracking-widest">EMS</h1>
@@ -8,6 +9,7 @@
   <nav class="flex-1 px-3 py-5">
     <p class="text-xs font-semibold uppercase tracking-wider text-white/30 px-3 mb-2">Управление</p>
 
+    {% if role == 'admin' %}
     <a href="/employees/"
        class="block px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5
               {% if path.startswith('/employees') %}bg-white/10 text-white{% else %}text-white/70 hover:bg-white/10 hover:text-white{% endif %}">
@@ -19,12 +21,15 @@
               {% if path.startswith('/companies') %}bg-white/10 text-white{% else %}text-white/70 hover:bg-white/10 hover:text-white{% endif %}">
       Компании
     </a>
+    {% endif %}
 
+    {% if role in ['admin', 'manager'] %}
     <a href="/wells/"
        class="block px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5
               {% if path.startswith('/wells') %}bg-white/10 text-white{% else %}text-white/70 hover:bg-white/10 hover:text-white{% endif %}">
       Скважины
     </a>
+    {% endif %}
 
     <a href="/productions/"
        class="block px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5
@@ -32,6 +37,7 @@
       Суточные рапорты
     </a>
 
+    {% if role in ['admin', 'manager'] %}
     <p class="text-xs font-semibold uppercase tracking-wider text-white/30 px-3 mb-2 mt-5">Аналитика</p>
 
     <a href="/dashboard/"
@@ -39,9 +45,15 @@
               {% if path.startswith('/dashboard') %}bg-white/10 text-white{% else %}text-white/70 hover:bg-white/10 hover:text-white{% endif %}">
       Дашборд
     </a>
+    {% endif %}
   </nav>
 
   <div class="px-3 py-3 border-t border-white/10">
+    {% if role %}
+    <div class="px-3 pb-2 text-xs text-white/40">
+      Роль: <span class="text-white/70 font-medium">{{ {'admin':'Администратор','manager':'Руководитель','operator':'Мастер'}.get(role, role) }}</span>
+    </div>
+    {% endif %}
     <a href="/logout" class="block px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all">Выход</a>
   </div>
 </aside>

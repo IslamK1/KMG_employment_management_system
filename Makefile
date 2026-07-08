@@ -28,3 +28,9 @@ js:
 	cp node_modules/chart.js/dist/chart.umd.js static/js/chart.umd.js
 test:
 	pytest -v 
+
+redis:
+	C:/redis/redis-server.exe
+
+worker:
+	celery -A app.celery_app worker --loglevel=info --pool=solo

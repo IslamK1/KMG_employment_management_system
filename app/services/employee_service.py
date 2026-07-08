@@ -176,3 +176,26 @@ def get_employees_paginated(
     total = db.query(Employee).count()
     employees = db.query(Employee).offset((page - 1) * per_page).limit(per_page).all()
     return employees, total
+
+
+def set_employee_role(db: Session, emp_id: int, role: str) -> bool:
+    """
+    Меняет роль сотрудника (используется админом при назначении менеджеров).
+
+    Args:
+        db (Session): Сессия базы данных.
+        emp_id (int): Идентификатор сотрудника.
+        role (str): Новая роль — admin, manager или operator.
+
+    Returns:
+        bool: True если роль изменена, False если сотрудник не найден
+              или роль недопустима.
+    """
+    if role not in ("admin", "manager", "operator"):
+        return False
+    employee = db.query(Employee).filter(Employee.id == emp_id).first()
+    if not employee:
+        return False
+    employee.role = role
+    db.commit()
+    return True

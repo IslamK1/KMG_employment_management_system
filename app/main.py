@@ -51,4 +51,4 @@ def root():
         RedirectResponse: Редирект на /employees/.
     """
 
-    return RedirectResponse(url="/employees/")
+    return RedirectResponse(url="/productions/")

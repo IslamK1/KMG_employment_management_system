@@ -67,7 +67,9 @@ def login(
 
     request.session["user"] = employee.email
     request.session["user_name"] = employee.name
-    return RedirectResponse(url="/employees/", status_code=302)
+    request.session["user_role"] = employee.role
+    request.session["user_company_id"] = employee.oil_company_id
+    return RedirectResponse(url="/productions/", status_code=302)
 
 
 @router.get("/logout")

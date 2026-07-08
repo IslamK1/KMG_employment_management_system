@@ -27,6 +27,26 @@
       <span class="text-sm font-semibold text-gray-500 w-40">Регион</span>
       <span class="text-sm text-gray-900">{{ emp.oil_company.region if emp.oil_company else "—" }}</span>
     </div>
+    <div class="flex items-center px-6 py-4">
+      <span class="text-sm font-semibold text-gray-500 w-40">Роль</span>
+      <span class="bg-slate-100 text-slate-700 text-xs font-medium px-2.5 py-1 rounded-full">
+        {{ {'admin':'Администратор','manager':'Руководитель ДЗО','operator':'Мастер'}.get(emp.role, emp.role) }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Назначение роли (только админ) -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <h2 class="text-sm font-semibold text-gray-900 mb-1">Назначить роль</h2>
+    <p class="text-xs text-gray-500 mb-4">Руководитель ДЗО управляет скважинами и дашбордом своей компании; Мастер вносит рапорты.</p>
+    <form method="post" action="/employees/set-role/{{ emp.id }}" class="flex items-center gap-3">
+      <select name="role" class="h-11 px-3 rounded-lg border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        <option value="operator" {% if emp.role == 'operator' %}selected{% endif %}>Мастер (Operator)</option>
+        <option value="manager" {% if emp.role == 'manager' %}selected{% endif %}>Руководитель ДЗО (Manager)</option>
+        <option value="admin" {% if emp.role == 'admin' %}selected{% endif %}>Администратор (Admin)</option>
+      </select>
+      <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Сохранить роль</button>
+    </form>
   </div>
 
   <div class="flex gap-3">

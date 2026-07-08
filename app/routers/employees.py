@@ -10,18 +10,19 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import require_auth
+from app.dependencies import require_auth, require_role
 from app.services import (
     create_employee,
     delete_employee,
     get_all_companies,
     get_employee_by_id,
     get_employees_paginated,
+    set_employee_role,
     update_employee,
 )
 
 # Все маршруты защищены через require_auth автоматически
-router = APIRouter(prefix="/employees", dependencies=[Depends(require_auth)])
+router = APIRouter(prefix="/employees", dependencies=[Depends(require_auth), Depends(require_role("admin"))])
 templates = Jinja2Templates(directory="templates")
 
 
@@ -142,3 +143,10 @@ def show(emp_id: int, request: Request, db: Session = Depends(get_db)):
         name="employees/show.html",
         context={"emp": emp, "user": request.session.get("user_name")},
     )
+
+
+@router.post("/set-role/{emp_id}")
+def set_role(emp_id: int, role: str = Form(...), db: Session = Depends(get_db)):
+    """Назначение роли сотруднику (только admin — роутер уже защищён)."""
+    set_employee_role(db, emp_id, role)
+    return RedirectResponse(url=f"/employees/{emp_id}", status_code=302)

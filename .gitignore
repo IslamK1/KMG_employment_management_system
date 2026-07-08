@@ -11,3 +11,4 @@ test.db
 dist/
 node_modules/
 static/src/
+uploads_tmp/

@@ -130,6 +130,60 @@ def get_all_wells(db: Session) -> list[type[Well]]:
     return db.query(Well).all()
 
 
+def get_wells_for_company(db: Session, company_id: int) -> list[type[Well]]:
+    """
+    Возвращает скважины конкретной компании.
+
+    Нужно для оператора: он выбирает скважину только из своей компании.
+
+    Args:
+        db (Session): Сессия базы данных.
+        company_id (int): Идентификатор компании.
+
+    Returns:
+        list[Well]: Скважины этой компании.
+    """
+    return db.query(Well).filter(Well.oil_company_id == company_id).all()
+
+
+def well_belongs_to_company(db: Session, well_id: int, company_id: int) -> bool:
+    """
+    Проверяет, что скважина принадлежит указанной компании.
+
+    Защита от подмены well_id в форме: оператор не сможет создать
+    рапорт по чужой скважине, даже если подставит её id вручную.
+
+    Args:
+        db (Session): Сессия базы данных.
+        well_id (int): Идентификатор скважины.
+        company_id (int): Идентификатор компании.
+
+    Returns:
+        bool: True если скважина принадлежит компании.
+    """
+    well = db.query(Well).filter(Well.id == well_id).first()
+    return well is not None and well.oil_company_id == company_id
+
+
+def is_report_locked(report_date, edit_days: int = 7) -> bool:
+    """
+    Проверяет, старше ли рапорт разрешённого срока редактирования.
+
+    Рапорты старше edit_days дней нельзя редактировать/удалять
+    (кроме админа — эта проверка вызывается только для не-админов).
+
+    Args:
+        report_date: Дата рапорта.
+        edit_days (int): Сколько дней рапорт доступен для правки.
+
+    Returns:
+        bool: True если рапорт «заморожен» (старше срока).
+    """
+    from datetime import date, timedelta
+
+    return report_date < date.today() - timedelta(days=edit_days)
+
+
 def get_reports_paginated(
     db: Session, page: int = 1, per_page: int = 10
 ) -> tuple[list[type[DailyProduction]], int]:
@@ -147,7 +201,7 @@ def get_reports_paginated(
     total = db.query(DailyProduction).count()
     reports = (
         db.query(DailyProduction)
-        .order_by(DailyProduction.date.desc())
+        .order_by(DailyProduction.date.desc(), DailyProduction.id.desc())
         .offset((page - 1) * per_page)
         .limit(per_page)
         .all()

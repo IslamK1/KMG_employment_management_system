@@ -21,6 +21,7 @@ class Employee(Base):
         email (str): Email адрес — используется для входа в систему.
         position (str): Должность сотрудника.
         password (str): Хэш пароля (bcrypt).
+        role (str): Роль сотрудника — admin, manager или operator.
         oil_company_id (int): Внешний ключ на нефтяную компанию.
         oil_company (OilCompany): Объект нефтяной компании.
     """
@@ -32,6 +33,7 @@ class Employee(Base):
     email = Column(String, unique=True, nullable=False)
     position = Column(String, nullable=True)
     password = Column(String, nullable=False)
+    role = Column(String, nullable=False, default="operator")
     oil_company_id = Column(Integer, ForeignKey("oil_companies.id"), nullable=True)
 
     oil_company = relationship("OilCompany", back_populates="employees")

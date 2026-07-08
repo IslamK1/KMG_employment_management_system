@@ -18,6 +18,9 @@ from app.services.daily_production_service import (
     delete_report as delete_report,
     get_all_reports as get_all_reports,
     get_all_wells as get_all_wells,
+    is_report_locked as is_report_locked,
+    well_belongs_to_company as well_belongs_to_company,
+    get_wells_for_company as get_wells_for_company,
     get_report_by_id as get_report_by_id,
     get_reports_paginated as get_reports_paginated,
 )
@@ -27,6 +30,7 @@ from app.services.employee_service import (
     delete_employee as delete_employee,
     get_all_companies as get_all_companies,
     get_all_employees as get_all_employees,
+    set_employee_role as set_employee_role,
     get_employee_by_id as get_employee_by_id,
     get_employees_paginated as get_employees_paginated,
     update_employee as update_employee,
