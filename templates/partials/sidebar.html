@@ -49,11 +49,6 @@
   </nav>
 
   <div class="px-3 py-3 border-t border-white/10">
-    {% if role %}
-    <div class="px-3 pb-2 text-xs text-white/40">
-      Роль: <span class="text-white/70 font-medium">{{ {'admin':'Администратор','manager':'Руководитель','operator':'Мастер'}.get(role, role) }}</span>
-    </div>
-    {% endif %}
     <a href="/logout" class="block px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all">Выход</a>
   </div>
 </aside>

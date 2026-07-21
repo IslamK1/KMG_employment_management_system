@@ -22,7 +22,10 @@ from app.services import (
 )
 
 # Все маршруты защищены через require_auth автоматически
-router = APIRouter(prefix="/employees", dependencies=[Depends(require_auth), Depends(require_role("admin"))])
+router = APIRouter(
+    prefix="/employees",
+    dependencies=[Depends(require_auth), Depends(require_role("admin"))],
+)
 templates = Jinja2Templates(directory="templates")
 
 

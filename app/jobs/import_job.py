@@ -14,7 +14,9 @@ from app.services.excel_service import import_productions
 
 
 @celery_app.task(name="import_daily_productions", bind=True)
-def import_daily_productions_job(self, file_path: str) -> dict:
+def import_daily_productions_job(
+    self, file_path: str, company_id: int | None = None
+) -> dict:
     """
     Импортирует рапорты из Excel-файла в фоне.
 
@@ -25,6 +27,7 @@ def import_daily_productions_job(self, file_path: str) -> dict:
 
     Args:
         file_path (str): Путь к временно сохранённому .xlsx файлу.
+        company_id (int | None): Ограничение по компании (для manager/operator).
 
     Returns:
         dict: {"created": int, "updated": int, "errors": [...]} —
@@ -35,7 +38,7 @@ def import_daily_productions_job(self, file_path: str) -> dict:
         with open(file_path, "rb") as f:
             file_bytes = f.read()
 
-        result = import_productions(db, file_bytes)
+        result = import_productions(db, file_bytes, company_id)
         return result
     finally:
         db.close()

@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import require_auth, require_role
+from app.dependencies import get_policy, require_auth, require_role
 from app.services import (
     create_well,
     delete_well,
@@ -20,8 +20,21 @@ from app.services import (
     update_well,
 )
 
-router = APIRouter(prefix="/wells", dependencies=[Depends(require_auth), Depends(require_role("admin", "manager"))])
+router = APIRouter(
+    prefix="/wells",
+    dependencies=[Depends(require_auth), Depends(require_role("admin", "manager"))],
+)
 templates = Jinja2Templates(directory="templates")
+
+
+def _companies_for(request: Request, db):
+    """Компании для выпадашки: admin — все, manager — только своя."""
+    policy = get_policy(request)
+    companies = get_all_companies(db)
+    cid = policy.visible_company_id()
+    if cid is not None:
+        companies = [c for c in companies if c.id == cid]
+    return companies
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -31,8 +44,11 @@ def index(
     page: int = Query(1, ge=1),
     per_page: int = Query(10, ge=1, le=100),
 ):
-    """Список всех скважин с пагинацией."""
-    wells, total = get_wells_paginated(db, page, per_page)
+    """Список скважин с пагинацией (manager видит только свою компанию)."""
+    policy = get_policy(request)
+    wells, total = get_wells_paginated(
+        db, page, per_page, company_id=policy.visible_company_id()
+    )
     total_pages = (total + per_page - 1) // per_page
 
     return templates.TemplateResponse(
@@ -58,7 +74,7 @@ def create_form(request: Request, db: Session = Depends(get_db)):
         context={
             "error": None,
             "user": request.session.get("user_name"),
-            "companies": get_all_companies(db),
+            "companies": _companies_for(request, db),
         },
     )
 
@@ -72,14 +88,18 @@ def create(
     oil_company_id: int = Form(...),
     db: Session = Depends(get_db),
 ):
-    """Создание новой скважины."""
+    """Создание новой скважины (manager — только в своей компании)."""
+    if not get_policy(request).can_assign_company(oil_company_id):
+        return RedirectResponse(url="/wells/", status_code=302)
     create_well(db, name, type, max_drilling_depth, oil_company_id)
     return RedirectResponse(url="/wells/", status_code=302)
 
 
 @router.get("/edit/{well_id}", response_class=HTMLResponse)
 def edit_form(well_id: int, request: Request, db: Session = Depends(get_db)):
-    """Форма редактирования скважины."""
+    """Форма редактирования скважины (только скважина своей компании)."""
+    if not get_policy(request).can_manage_well(db, well_id):
+        return RedirectResponse(url="/wells/", status_code=302)
     well = get_well_by_id(db, well_id)
     if not well:
         return RedirectResponse(url="/wells/", status_code=302)
@@ -90,7 +110,7 @@ def edit_form(well_id: int, request: Request, db: Session = Depends(get_db)):
             "well": well,
             "error": None,
             "user": request.session.get("user_name"),
-            "companies": get_all_companies(db),
+            "companies": _companies_for(request, db),
         },
     )
 
@@ -105,7 +125,12 @@ def edit(
     oil_company_id: int = Form(...),
     db: Session = Depends(get_db),
 ):
-    """Обновление данных скважины."""
+    """Обновление данных скважины (только своей компании)."""
+    policy = get_policy(request)
+    if not policy.can_manage_well(db, well_id) or not policy.can_assign_company(
+        oil_company_id
+    ):
+        return RedirectResponse(url="/wells/", status_code=302)
     well = update_well(db, well_id, name, type, max_drilling_depth, oil_company_id)
     if not well:
         return RedirectResponse(url="/wells/", status_code=302)
@@ -114,14 +139,18 @@ def edit(
 
 @router.get("/delete/{well_id}")
 def delete(well_id: int, request: Request, db: Session = Depends(get_db)):
-    """Удаление скважины."""
+    """Удаление скважины (только своей компании)."""
+    if not get_policy(request).can_manage_well(db, well_id):
+        return RedirectResponse(url="/wells/", status_code=302)
     delete_well(db, well_id)
     return RedirectResponse(url="/wells/", status_code=302)
 
 
 @router.get("/{well_id}", response_class=HTMLResponse)
 def show(well_id: int, request: Request, db: Session = Depends(get_db)):
-    """Просмотр скважины со списком её суточных рапортов."""
+    """Просмотр скважины (только своей компании)."""
+    if not get_policy(request).can_manage_well(db, well_id):
+        return RedirectResponse(url="/wells/", status_code=302)
     well = get_well_by_id(db, well_id)
     if not well:
         return RedirectResponse(url="/wells/", status_code=302)

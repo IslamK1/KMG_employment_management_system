@@ -22,7 +22,9 @@ EXPORT_DIR = "uploads_tmp"
 
 
 @celery_app.task(name="export_reports", bind=True)
-def export_reports_job(self, year: int, month: int, kind: str) -> dict:
+def export_reports_job(
+    self, year: int, month: int, kind: str, company_id: int | None = None
+) -> dict:
     """
     Формирует Excel-отчёт в фоне и сохраняет его на диск.
 
@@ -30,6 +32,7 @@ def export_reports_job(self, year: int, month: int, kind: str) -> dict:
         year (int): Год.
         month (int): Месяц (1-12).
         kind (str): "summary" — сводка, "detailed" — детальный список.
+        company_id (int | None): Ограничение по компании (manager видит свою).
 
     Returns:
         dict: {"filename": str} — имя готового файла в EXPORT_DIR,
@@ -40,10 +43,10 @@ def export_reports_job(self, year: int, month: int, kind: str) -> dict:
     db = SessionLocal()
     try:
         if kind == "detailed":
-            content = export_detailed_reports(db, year, month)
+            content = export_detailed_reports(db, year, month, company_id)
             prefix = "reports"
         else:
-            content = export_monthly_summary(db, year, month)
+            content = export_monthly_summary(db, year, month, company_id)
             prefix = "summary"
 
         # уникальное имя, чтобы отчёты разных пользователей не пересекались

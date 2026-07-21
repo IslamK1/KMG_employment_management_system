@@ -19,7 +19,10 @@ from app.services import (
     update_company,
 )
 
-router = APIRouter(prefix="/companies", dependencies=[Depends(require_auth), Depends(require_role("admin"))])
+router = APIRouter(
+    prefix="/companies",
+    dependencies=[Depends(require_auth), Depends(require_role("admin"))],
+)
 templates = Jinja2Templates(directory="templates")
 
 

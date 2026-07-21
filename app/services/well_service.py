@@ -114,7 +114,7 @@ def delete_well(db: Session, well_id: int) -> bool:
 
 
 def get_wells_paginated(
-    db: Session, page: int = 1, per_page: int = 10
+    db: Session, page: int = 1, per_page: int = 10, company_id: int | None = None
 ) -> tuple[list[Well], int]:
     """
     Возвращает скважины с пагинацией.
@@ -123,16 +123,16 @@ def get_wells_paginated(
         db (Session): Сессия базы данных.
         page (int): Номер страницы.
         per_page (int): Количество записей на странице.
+        company_id (int | None): Если задан — только скважины этой компании
+            (для менеджера, который видит лишь свою компанию).
 
     Returns:
         tuple: (список скважин, общее количество).
     """
-    total = db.query(Well).count()
-    wells = (
-        db.query(Well)
-        .order_by(Well.name)
-        .offset((page - 1) * per_page)
-        .limit(per_page)
-        .all()
-    )
+    base = db.query(Well)
+    if company_id is not None:
+        base = base.filter(Well.oil_company_id == company_id)
+
+    total = base.count()
+    wells = base.order_by(Well.name).offset((page - 1) * per_page).limit(per_page).all()
     return wells, total

@@ -17,12 +17,11 @@ from sqlalchemy.orm import Session
 
 from app.celery_app import celery_app
 from app.database import get_db
-from app.dependencies import require_auth
+from app.dependencies import get_policy, require_auth
 from app.jobs.export_job import export_reports_job
 from app.jobs.import_job import import_daily_productions_job
 from app.services import (
     build_import_template,
-    get_all_wells,
 )
 
 router = APIRouter(prefix="/excel", dependencies=[Depends(require_auth)])
@@ -44,9 +43,9 @@ def _xlsx_response(content: bytes, filename: str) -> StreamingResponse:
 
 
 @router.get("/template")
-def download_template(db: Session = Depends(get_db)):
-    """Скачивание шаблона для импорта со справочником скважин."""
-    wells = get_all_wells(db)
+def download_template(request: Request, db: Session = Depends(get_db)):
+    """Скачивание шаблона со справочником доступных пользователю скважин."""
+    wells = get_policy(request).wells_for_form(db)
     content = build_import_template(wells)
     return _xlsx_response(content, "import_template.xlsx")
 
@@ -72,7 +71,9 @@ async def import_file(request: Request, file: UploadFile = File(...)):
         f.write(content)
 
     # кладём задачу в очередь — worker подхватит её в фоне
-    task = import_daily_productions_job.delay(tmp_path)
+    # ограничение по компании: manager/operator импортируют только свои скважины
+    company_id = get_policy(request).visible_company_id()
+    task = import_daily_productions_job.delay(tmp_path, company_id)
 
     # мгновенный ответ: оператор видит "идёт обработка", не ждёт импорт
     return RedirectResponse(url=f"/productions/?task={task.id}", status_code=302)
@@ -109,13 +110,12 @@ def export_start(
     Экспорт отчётов холдинга недоступен оператору.
     Сам файл здесь НЕ генерируется — этим займётся worker в фоне.
     """
-    if request.session.get("user_role") == "operator":
+    policy = get_policy(request)
+    if not policy.can_export_reports():
         return RedirectResponse(url="/productions/", status_code=302)
 
-    task = export_reports_job.delay(year, month, kind)
-    return RedirectResponse(
-        url=f"/productions/?export_task={task.id}", status_code=302
-    )
+    task = export_reports_job.delay(year, month, kind, policy.visible_company_id())
+    return RedirectResponse(url=f"/productions/?export_task={task.id}", status_code=302)
 
 
 @router.get("/export/status/{task_id}")
@@ -143,9 +143,7 @@ def export_download(filename: str):
     path = os.path.join(UPLOAD_DIR, safe_name)
 
     if not os.path.exists(path):
-        return JSONResponse(
-            {"error": "Файл не найден или уже скачан"}, status_code=404
-        )
+        return JSONResponse({"error": "Файл не найден или уже скачан"}, status_code=404)
 
     with open(path, "rb") as f:
         content = f.read()

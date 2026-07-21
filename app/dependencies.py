@@ -17,6 +17,19 @@ FastAPI проигнорирует его (значение уйдёт как р
 
 from fastapi import HTTPException, Request, status
 
+from app.policies import AccessPolicy
+
+
+def get_policy(request: Request) -> AccessPolicy:
+    """
+    Возвращает объект политики доступа для текущего пользователя.
+
+    Единая точка получения ролевых прав в роутерах:
+        policy = get_policy(request)
+        if not policy.can_access_dashboard(): ...
+    """
+    return AccessPolicy(get_current_user(request))
+
 
 def _redirect(url: str) -> HTTPException:
     """Создаёт исключение-редирект (302 + заголовок Location)."""

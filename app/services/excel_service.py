@@ -107,7 +107,9 @@ def _parse_date(value):
     return date.fromisoformat(str(value).strip())
 
 
-def import_productions(db: Session, file_bytes: bytes) -> dict:
+def import_productions(
+    db: Session, file_bytes: bytes, company_id: int | None = None
+) -> dict:
     """
     Массовый импорт рапортов из Excel-файла.
 
@@ -117,6 +119,8 @@ def import_productions(db: Session, file_bytes: bytes) -> dict:
     Args:
         db (Session): Сессия базы данных.
         file_bytes (bytes): Содержимое загруженного .xlsx файла.
+        company_id (int | None): Если задан — разрешены только скважины
+            этой компании (manager/operator не могут импортировать чужие).
 
     Returns:
         dict: {"created": int, "updated": int, "errors": [строки с ошибками]}
@@ -138,8 +142,14 @@ def import_productions(db: Session, file_bytes: bytes) -> dict:
         well_name = str(row[0]).strip() if row[0] is not None else ""
         well = db.query(Well).filter(Well.name == well_name).first()
         if not well:
+            errors.append(f"Строка {row_index}: скважина '{well_name}' не найдена")
+            continue
+
+        # запрет импорта по чужим скважинам (для manager и operator)
+        if company_id is not None and well.oil_company_id != company_id:
             errors.append(
-                f"Строка {row_index}: скважина '{well_name}' не найдена"
+                f"Строка {row_index}: скважина '{well_name}' "
+                f"не принадлежит вашей компании"
             )
             continue
 
@@ -195,7 +205,9 @@ def import_productions(db: Session, file_bytes: bytes) -> dict:
     return {"created": created, "updated": updated, "errors": errors}
 
 
-def export_monthly_summary(db: Session, year: int, month: int) -> bytes:
+def export_monthly_summary(
+    db: Session, year: int, month: int, company_id: int | None = None
+) -> bytes:
     """
     Формирует сводный отчёт по скважинам за месяц в .xlsx.
 
@@ -227,7 +239,11 @@ def export_monthly_summary(db: Session, year: int, month: int) -> bytes:
         .join(DailyProduction, DailyProduction.well_id == Well.id)
         .join(OilCompany, OilCompany.id == Well.oil_company_id)
         .filter(DailyProduction.date >= start, DailyProduction.date <= end)
-        .group_by(Well.name, OilCompany.name, Well.type)
+    )
+    if company_id is not None:
+        rows = rows.filter(Well.oil_company_id == company_id)
+    rows = (
+        rows.group_by(Well.name, OilCompany.name, Well.type)
         .order_by(func.sum(OIL_EXPR).desc())
         .all()
     )
@@ -284,7 +300,9 @@ def export_monthly_summary(db: Session, year: int, month: int) -> bytes:
     return buffer.getvalue()
 
 
-def export_detailed_reports(db: Session, year: int, month: int) -> bytes:
+def export_detailed_reports(
+    db: Session, year: int, month: int, company_id: int | None = None
+) -> bytes:
     """
     Детальная выгрузка рапортов за месяц — каждый рапорт отдельной строкой.
 
@@ -314,9 +332,10 @@ def export_detailed_reports(db: Session, year: int, month: int) -> bytes:
         )
         .join(Well, Well.id == DailyProduction.well_id)
         .filter(DailyProduction.date >= start, DailyProduction.date <= end)
-        .order_by(DailyProduction.date.desc(), DailyProduction.id.desc())
-        .all()
     )
+    if company_id is not None:
+        rows = rows.filter(Well.oil_company_id == company_id)
+    rows = rows.order_by(DailyProduction.date.desc(), DailyProduction.id.desc()).all()
 
     wb = Workbook()
     ws = wb.active

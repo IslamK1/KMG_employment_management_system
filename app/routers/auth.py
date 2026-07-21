@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models import Employee, OilCompany
 from app.services import authenticate_employee
 
 router = APIRouter()
@@ -68,7 +69,13 @@ def login(
     request.session["user"] = employee.email
     request.session["user_name"] = employee.name
     request.session["user_role"] = employee.role
+    # настоящая роль — не меняется при примерке другой роли
+    request.session["real_role"] = employee.role
     request.session["user_company_id"] = employee.oil_company_id
+    # название компании для отображения в интерфейсе
+    request.session["user_company"] = (
+        employee.oil_company.name if employee.oil_company else None
+    )
     return RedirectResponse(url="/productions/", status_code=302)
 
 
@@ -87,3 +94,41 @@ def logout(request: Request):
     """
     request.session.clear()
     return RedirectResponse(url="/login", status_code=302)
+
+
+@router.get("/impersonate/{role}")
+def impersonate(role: str, request: Request, db: Session = Depends(get_db)):
+    """
+    Примерка роли: админ смотрит систему глазами менеджера или оператора.
+
+    Настоящая роль (real_role) остаётся в сессии, поэтому вернуться
+    обратно может только тот, кто изначально вошёл как admin.
+    Подменяются активная роль и компания — по ним работает вся логика.
+    """
+    # переключаться может только настоящий админ
+    if request.session.get("real_role") != "admin":
+        return RedirectResponse(url="/productions/", status_code=302)
+
+    if role not in ("admin", "manager", "operator"):
+        return RedirectResponse(url="/productions/", status_code=302)
+
+    if role == "admin":
+        # возврат к своей роли: снова весь холдинг
+        request.session["user_role"] = "admin"
+        request.session["user_company_id"] = None
+        request.session["user_company"] = None
+        return RedirectResponse(url="/productions/", status_code=302)
+
+    # берём реального сотрудника с этой ролью, чтобы взять его компанию
+    sample = db.query(Employee).filter(Employee.role == role).first()
+    company_id = sample.oil_company_id if sample else None
+    company = None
+    if company_id:
+        company_obj = db.query(OilCompany).filter(OilCompany.id == company_id).first()
+        company = company_obj.name if company_obj else None
+
+    request.session["user_role"] = role
+    request.session["user_company_id"] = company_id
+    request.session["user_company"] = company
+
+    return RedirectResponse(url="/productions/", status_code=302)

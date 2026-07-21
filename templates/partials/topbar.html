@@ -1,9 +1,58 @@
+{% set role = request.session.get('user_role') %}
+{% set real_role = request.session.get('real_role') %}
+{% set company = request.session.get('user_company') %}
 <header class="bg-white border-b border-gray-200 px-8 py-3.5 flex items-center justify-between flex-shrink-0">
   <button class="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer" onclick="history.back()">Назад</button>
-  <div class="flex items-center gap-3">
-    <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">
-      {{ user[0]|upper if user else "?" }}
+
+  <div class="flex items-center gap-4">
+
+    {# Переключатель ролей — только для настоящего админа #}
+    {% if real_role == 'admin' %}
+    <div class="relative">
+      <button type="button" onclick="document.getElementById('roleMenu').classList.toggle('hidden')"
+              class="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+        Смотреть как:
+        <span class="text-indigo-600">{{ {'admin':'Администратор','manager':'Руководитель','operator':'Мастер'}.get(role, role) }}</span>
+        <span class="text-gray-400">▾</span>
+      </button>
+      <div id="roleMenu" class="hidden absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-20">
+        <a href="/impersonate/admin" class="block px-4 py-2 text-sm hover:bg-gray-50 {% if role=='admin' %}text-indigo-600 font-semibold{% else %}text-gray-700{% endif %}">Администратор</a>
+        <a href="/impersonate/manager" class="block px-4 py-2 text-sm hover:bg-gray-50 {% if role=='manager' %}text-indigo-600 font-semibold{% else %}text-gray-700{% endif %}">Руководитель ДЗО</a>
+        <a href="/impersonate/operator" class="block px-4 py-2 text-sm hover:bg-gray-50 {% if role=='operator' %}text-indigo-600 font-semibold{% else %}text-gray-700{% endif %}">Мастер</a>
+      </div>
     </div>
-    <span class="text-sm font-medium text-gray-700">{{ user }}</span>
+    <div class="w-px h-6 bg-gray-200"></div>
+    {% endif %}
+
+    {% if role %}
+    <div class="flex items-center gap-2">
+      <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+        {{ {'admin':'Администратор','manager':'Руководитель','operator':'Мастер'}.get(role, role) }}
+      </span>
+      <span class="bg-indigo-50 text-indigo-700 text-xs font-medium px-2.5 py-1 rounded-full max-w-56 truncate">
+        {% if role == 'admin' %}Весь холдинг{% else %}{{ company or '—' }}{% endif %}
+      </span>
+    </div>
+    <div class="w-px h-6 bg-gray-200"></div>
+    {% endif %}
+
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm font-bold">
+        {{ user[0]|upper if user else "?" }}
+      </div>
+      <span class="text-sm font-medium text-gray-700">{{ user }}</span>
+    </div>
   </div>
 </header>
+
+{# Баннер: админ смотрит чужими глазами #}
+{% if real_role == 'admin' and role != 'admin' %}
+<div class="bg-amber-50 border-b border-amber-200 px-8 py-2.5 flex items-center justify-between">
+  <p class="text-sm text-amber-800">
+    Вы смотрите систему как <b>{{ {'manager':'Руководитель ДЗО','operator':'Мастер'}.get(role, role) }}</b>{% if company %} — {{ company }}{% endif %}
+  </p>
+  <a href="/impersonate/admin" class="text-xs font-semibold text-amber-900 hover:text-amber-950 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors">
+    Вернуться в администратора
+  </a>
+</div>
+{% endif %}
