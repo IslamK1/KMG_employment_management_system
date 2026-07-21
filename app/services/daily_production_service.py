@@ -5,11 +5,17 @@
 
 from datetime import date
 
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
+from app import cache
 from app.models import DailyProduction, Well
 from app.schemas import DailyProductionCreate
+
+# Eager loading: подгружаем скважину и её компанию заранее, одним набором
+# запросов. Без этого шаблон дёргает БД на каждую строку рапорта — классический N+1.
+_EAGER = selectinload(DailyProduction.well).selectinload(Well.oil_company)
 
 
 def get_all_reports(db: Session) -> list[type[DailyProduction]]:
@@ -22,7 +28,12 @@ def get_all_reports(db: Session) -> list[type[DailyProduction]]:
     Returns:
         list[DailyProduction]: Список всех рапортов.
     """
-    return db.query(DailyProduction).order_by(DailyProduction.date.desc()).all()
+    return (
+        db.query(DailyProduction)
+        .options(_EAGER)
+        .order_by(DailyProduction.date.desc())
+        .all()
+    )
 
 
 def get_report_by_id(db: Session, report_id: int) -> type[DailyProduction] | None:
@@ -92,6 +103,7 @@ def create_report(
     try:
         db.add(report)
         db.commit()
+        cache.invalidate()  # данные изменились — сбрасываем кэш дашборда
         return report, None
     except IntegrityError:
         db.rollback()
@@ -114,6 +126,7 @@ def delete_report(db: Session, report_id: int) -> bool:
         return False
     db.delete(report)
     db.commit()
+    cache.invalidate()  # данные изменились — сбрасываем кэш дашборда
     return True
 
 
@@ -185,7 +198,7 @@ def is_report_locked(report_date, edit_days: int = 7) -> bool:
 
 
 def get_reports_paginated(
-    db: Session, page: int = 1, per_page: int = 10
+    db: Session, page: int = 1, per_page: int = 10, company_id: int | None = None
 ) -> tuple[list[type[DailyProduction]], int]:
     """
     Возвращает рапорты с пагинацией.
@@ -194,14 +207,20 @@ def get_reports_paginated(
         db (Session): Сессия базы данных.
         page (int): Номер страницы.
         per_page (int): Количество записей на странице.
+        company_id (int | None): Если задан — только рапорты по скважинам
+            этой компании (manager и operator видят лишь свою компанию).
 
     Returns:
         tuple: (список рапортов, общее количество).
     """
-    total = db.query(DailyProduction).count()
+    base = db.query(DailyProduction).options(_EAGER)
+    if company_id is not None:
+        own_wells = select(Well.id).where(Well.oil_company_id == company_id)
+        base = base.filter(DailyProduction.well_id.in_(own_wells))
+
+    total = base.count()
     reports = (
-        db.query(DailyProduction)
-        .order_by(DailyProduction.date.desc(), DailyProduction.id.desc())
+        base.order_by(DailyProduction.date.desc(), DailyProduction.id.desc())
         .offset((page - 1) * per_page)
         .limit(per_page)
         .all()

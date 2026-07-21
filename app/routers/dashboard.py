@@ -12,8 +12,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app import cache
 from app.database import get_db
-from app.dependencies import require_auth, require_role
+from app.dependencies import get_policy, require_auth, require_role
 from app.services import (
     get_kpis,
     get_oil_dynamics,
@@ -41,49 +42,77 @@ def index(request: Request):
 
 @router.get("/api/oil-dynamics")
 def api_oil_dynamics(
+    request: Request,
     db: Session = Depends(get_db),
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
 ):
     """JSON: динамика добычи нефти по датам."""
-    return JSONResponse(get_oil_dynamics(db, date_from, date_to))
+    company_id = get_policy(request).visible_company_id()
+    key = f"oil-dynamics:{company_id}:{date_from}:{date_to}"
+    data = cache.get_or_set(
+        key, lambda: get_oil_dynamics(db, date_from, date_to, company_id)
+    )
+    return JSONResponse(data)
 
 
 @router.get("/api/water-cut")
 def api_water_cut(
+    request: Request,
     db: Session = Depends(get_db),
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
 ):
     """JSON: обводненность скважин одной компании."""
-    return JSONResponse(get_water_cut_by_company(db, date_from, date_to))
+    company_id = get_policy(request).visible_company_id()
+    key = f"water-cut:{company_id}:{date_from}:{date_to}"
+    data = cache.get_or_set(
+        key, lambda: get_water_cut_by_company(db, date_from, date_to, company_id)
+    )
+    return JSONResponse(data)
 
 
 @router.get("/api/well-types")
 def api_well_types(
+    request: Request,
     db: Session = Depends(get_db),
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
 ):
     """JSON: распределение фонда скважин по типам."""
-    return JSONResponse(get_well_types_distribution(db, date_from, date_to))
+    company_id = get_policy(request).visible_company_id()
+    key = f"well-types:{company_id}:{date_from}:{date_to}"
+    data = cache.get_or_set(
+        key, lambda: get_well_types_distribution(db, date_from, date_to, company_id)
+    )
+    return JSONResponse(data)
 
 
 @router.get("/api/top-companies")
 def api_top_companies(
+    request: Request,
     db: Session = Depends(get_db),
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
 ):
     """JSON: топ компаний по добыче."""
-    return JSONResponse(get_top_companies(db, date_from, date_to))
+    company_id = get_policy(request).visible_company_id()
+    key = f"top-companies:{company_id}:{date_from}:{date_to}"
+    data = cache.get_or_set(
+        key, lambda: get_top_companies(db, date_from, date_to, company_id=company_id)
+    )
+    return JSONResponse(data)
 
 
 @router.get("/api/kpis")
 def api_kpis(
+    request: Request,
     db: Session = Depends(get_db),
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
 ):
     """JSON: ключевые показатели для карточек."""
-    return JSONResponse(get_kpis(db, date_from, date_to))
+    company_id = get_policy(request).visible_company_id()
+    key = f"kpis:{company_id}:{date_from}:{date_to}"
+    data = cache.get_or_set(key, lambda: get_kpis(db, date_from, date_to, company_id))
+    return JSONResponse(data)
