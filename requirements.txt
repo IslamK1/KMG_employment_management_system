@@ -5,7 +5,6 @@ alembic==1.18.4
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
-asgiref==3.11.1
 async-lru==2.3.0
 attrs==26.1.0
 bcrypt==5.0.0
@@ -13,9 +12,6 @@ certifi==2026.2.25
 charset-normalizer==3.4.7
 click==8.3.3
 colorama==0.4.6
-dj-database-url==3.1.2
-Django==6.0.5
-django-heroku==0.3.1
 et_xmlfile==2.0.0
 Faker==40.21.0
 fastapi==0.136.1
@@ -37,7 +33,6 @@ packaging==26.2
 passlib==1.7.4
 pluggy==1.6.0
 propcache==0.5.2
-psycopg2==2.9.12
 psycopg2-binary==2.9.12
 pydantic==2.13.4
 pydantic-settings==2.14.1
@@ -49,15 +44,14 @@ python-multipart==0.0.30
 requests==2.33.1
 ruff==0.15.15
 SQLAlchemy==2.0.50
-sqlparse==0.5.5
 starlette==1.0.0
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 tzdata==2026.2
 urllib3==2.6.3
 uvicorn==0.46.0
-whitenoise==6.12.0
 yarl==1.23.0
 
 celery==5.6.3
 redis==5.2.1
+PyJWT==2.10.1
