@@ -15,10 +15,11 @@ from app.routers import (
     companies_router,
     dashboard_router,
     emp_router,
+    excel_router,
     productions_router,
     wells_router,
-    excel_router,
 )
+from app.routers.api.v1 import api_v1_router
 
 app = FastAPI(title="Employee Management System")
 
@@ -36,6 +37,9 @@ app.include_router(dashboard_router)
 app.include_router(companies_router)
 app.include_router(wells_router)
 app.include_router(excel_router)
+
+# Мобильный API (токен-аутентификация, группа /api/v1)
+app.include_router(api_v1_router)
 
 
 @app.get("/")

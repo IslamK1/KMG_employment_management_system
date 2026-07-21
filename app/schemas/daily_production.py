@@ -44,3 +44,25 @@ class DailyProductionCreate(BaseModel):
         if not 0 <= v <= 100:
             raise ValueError("Обводненность должна быть от 0 до 100%")
         return v
+
+
+class DailyProductionRead(BaseModel):
+    """
+    Схема ответа с созданным рапортом (для мобильного клиента).
+
+    Помимо введённых полей возвращает рассчитанный объём чистой нефти —
+    оператор сразу видит результат расчёта на экране.
+    """
+
+    id: int
+    well_id: int
+    date: date
+    working_hours: float
+    liquid_volume: float
+    water_cut: float
+    density: float
+    oil_volume: float
+
+    # from_attributes позволяет собрать схему прямо из ORM-объекта,
+    # включая вычисляемое свойство oil_volume.
+    model_config = {"from_attributes": True}
