@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_policy, require_auth
+from app.audit import set_actor
 from app.policies.access_policy import REPORT_EDIT_DAYS
 from app.schemas import DailyProductionCreate
 from app.services import (
@@ -18,6 +19,7 @@ from app.services import (
     delete_report,
     get_report_by_id,
     get_reports_paginated,
+    update_report,
 )
 
 router = APIRouter(
@@ -52,7 +54,8 @@ def index(
     error_message = None
     if error == "locked":
         error_message = (
-            "Нельзя удалять рапорты старше недели. Обратитесь к администратору."
+            "Нельзя удалять рапорты старше недели. "
+            "Обратитесь к администратору."
         )
 
     return templates.TemplateResponse(
@@ -145,6 +148,7 @@ def create(
             },
         )
 
+    set_actor(request.session.get("user_name") or request.session.get("user"))
     report, error = create_report(db, data)
     if error:
         return templates.TemplateResponse(
@@ -160,6 +164,73 @@ def create(
     return RedirectResponse(url="/productions/", status_code=302)
 
 
+@router.get("/edit/{report_id}", response_class=HTMLResponse)
+def edit_form(report_id: int, request: Request, db: Session = Depends(get_db)):
+    """Форма редактирования рапорта (свои скважины, не старше недели)."""
+    policy = get_policy(request)
+    report = get_report_by_id(db, report_id)
+    if not report or not policy.can_view_report(db, report):
+        return RedirectResponse(url="/productions/", status_code=302)
+    if not policy.is_admin and policy.is_report_locked(report.date):
+        return RedirectResponse(url="/productions/?error=locked", status_code=302)
+    return templates.TemplateResponse(
+        request=request,
+        name="productions/edit.html",
+        context={"report": report, "user": request.session.get("user_name")},
+    )
+
+
+@router.post("/edit/{report_id}")
+def edit(
+    report_id: int,
+    request: Request,
+    working_hours: float = Form(...),
+    liquid_volume: float = Form(...),
+    water_cut: float = Form(...),
+    density: float = Form(...),
+    db: Session = Depends(get_db),
+):
+    """Сохранение изменений. Смена обводнённости попадает в журнал аудита."""
+    policy = get_policy(request)
+    report = get_report_by_id(db, report_id)
+    if not report or not policy.can_view_report(db, report):
+        return RedirectResponse(url="/productions/", status_code=302)
+    if not policy.is_admin and policy.is_report_locked(report.date):
+        return RedirectResponse(url="/productions/?error=locked", status_code=302)
+
+    try:
+        DailyProductionCreate(
+            well_id=report.well_id,
+            date=report.date,
+            working_hours=working_hours,
+            liquid_volume=liquid_volume,
+            water_cut=water_cut,
+            density=density,
+        )
+    except Exception as e:
+        return templates.TemplateResponse(
+            request=request,
+            name="productions/edit.html",
+            context={
+                "report": report,
+                "error": str(e),
+                "user": request.session.get("user_name"),
+            },
+        )
+
+    # кто редактирует — запишется в аудит наблюдателем
+    set_actor(request.session.get("user_name") or request.session.get("user"))
+    update_report(
+        db,
+        report,
+        working_hours=working_hours,
+        liquid_volume=liquid_volume,
+        water_cut=water_cut,
+        density=density,
+    )
+    return RedirectResponse(url="/productions/", status_code=302)
+
+
 @router.get("/delete/{report_id}")
 def delete(report_id: int, request: Request, db: Session = Depends(get_db)):
     """Удаление суточного рапорта (старые рапорты защищены от всех кроме admin)."""
@@ -170,6 +241,7 @@ def delete(report_id: int, request: Request, db: Session = Depends(get_db)):
     if not policy.can_delete_report(db, report):
         return RedirectResponse(url="/productions/?error=locked", status_code=302)
 
+    set_actor(request.session.get("user_name") or request.session.get("user"))
     delete_report(db, report_id)
     return RedirectResponse(url="/productions/", status_code=302)
 

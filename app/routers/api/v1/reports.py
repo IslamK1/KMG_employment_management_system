@@ -10,6 +10,7 @@ GET  /wells   — список скважин пользователя (чтоб
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.audit import set_actor
 from app.database import get_db
 from app.models import Employee
 from app.routers.api.v1.deps import get_current_api_user
@@ -68,6 +69,7 @@ def create_report(
                 detail="Скважина не принадлежит вашей компании",
             )
 
+    set_actor(user.name or user.email)
     report, error = svc.create_report(db, payload)
     if error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=error)

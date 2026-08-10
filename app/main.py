@@ -15,11 +15,14 @@ from app.routers import (
     companies_router,
     dashboard_router,
     emp_router,
-    excel_router,
     productions_router,
     wells_router,
+    excel_router,
 )
 from app.routers.api.v1 import api_v1_router
+
+# Регистрация наблюдателя за изменениями рапортов (аудит water_cut)
+from app import audit  # noqa: F401
 
 app = FastAPI(title="Employee Management System")
 

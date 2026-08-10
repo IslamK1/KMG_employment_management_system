@@ -14,7 +14,8 @@ from app.models import DailyProduction, Well
 from app.schemas import DailyProductionCreate
 
 # Eager loading: подгружаем скважину и её компанию заранее, одним набором
-# запросов. Без этого шаблон дёргает БД на каждую строку рапорта — классический N+1.
+# запросов (аналог with('well.oilCompany') в Laravel). Без этого шаблон
+# дёргает БД на каждую строку рапорта — классический N+1.
 _EAGER = selectinload(DailyProduction.well).selectinload(Well.oil_company)
 
 
@@ -48,6 +49,30 @@ def get_report_by_id(db: Session, report_id: int) -> type[DailyProduction] | Non
         DailyProduction | None: Объект рапорта или None если не найден.
     """
     return db.query(DailyProduction).filter(DailyProduction.id == report_id).first()
+
+
+def update_report(
+    db: Session,
+    report: DailyProduction,
+    *,
+    working_hours: float,
+    liquid_volume: float,
+    water_cut: float,
+    density: float,
+) -> DailyProduction:
+    """
+    Обновляет показатели рапорта.
+
+    Коммит запускает наблюдателя (app/audit.py): если изменилась
+    обводнённость, в audit_logs добавится запись.
+    """
+    report.working_hours = working_hours
+    report.liquid_volume = liquid_volume
+    report.water_cut = water_cut
+    report.density = density
+    db.commit()
+    cache.invalidate()  # данные изменились — сбрасываем кэш дашборда
+    return report
 
 
 def check_duplicate(db: Session, well_id: int, report_date: date) -> bool:
